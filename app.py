@@ -268,16 +268,23 @@ def create_app(config_name='development'):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Run app with production-ready port configuration
+# ============================================================
+# PRODUCTION READY - MODIFIED FOR RENDER DEPLOYMENT
+# ============================================================
 if __name__ == '__main__':
-    # Get port from environment variable (for production) or use default
-    port = int(os.environ.get('PORT', 5000))
-    # Get debug mode from environment (default to False for production)
-    debug = os.environ.get('FLASK_ENV', 'development') == 'development'
+    # Get port from environment variable (Render uses PORT)
+    port = int(os.environ.get('PORT', 10000))
     
-    # Use socketio.run for development, or app.run for production
-    if debug:
-        socketio.run(app, debug=True, host='0.0.0.0', port=port)
-    else:
-        # For production (Render, PythonAnywhere, etc.)
+    # Check if we're in production or development
+    is_production = os.environ.get('FLASK_ENV', 'development') == 'production'
+    
+    if is_production:
+        # Production mode - use simple app.run with minimal resources
+        print(f"🚀 Starting VCH in PRODUCTION mode on port {port}")
+        app = create_app('production')
         app.run(host='0.0.0.0', port=port, debug=False)
+    else:
+        # Development mode - use socketio with debug
+        print(f"🔧 Starting VCH in DEVELOPMENT mode on port {port}")
+        app = create_app('development')
+        socketio.run(app, debug=True, host='0.0.0.0', port=port)
