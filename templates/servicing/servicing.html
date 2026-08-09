@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Servicing - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-wrench gold"></i> Daily Servicing</h2>
+    <p class="text-muted-custom">Perform daily servicing to earn KSH 50</p>
+    
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(total_earnings or 0) }}</div>
+                <div class="label">Total Service Earnings</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH 50</div>
+                <div class="label">Daily Earning</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">
+                    {% if today_service %}
+                    <span class="text-success">✅ Done</span>
+                    {% else %}
+                    <span class="text-warning">⏳ Pending</span>
+                    {% endif %}
+                </div>
+                <div class="label">Today's Service</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Service Action -->
+    <div class="card-dark mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5><i class="fas fa-tools gold"></i> Perform Daily Servicing</h5>
+                <p class="text-muted-custom mb-md-0">
+                    {% if today_service %}
+                    You have already performed daily servicing today.
+                    <span class="text-success">✅ Earned KSH {{ "%.2f"|format(today_service.earning) }}</span>
+                    {% else %}
+                    Click the button to perform daily servicing and earn KSH 50.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if today_service %}
+                    <button class="btn-outline-gold" disabled>
+                        <i class="fas fa-check"></i> Completed Today
+                    </button>
+                {% else %}
+                    <form method="POST" action="{{ url_for('servicing.perform_service') }}">
+                        <button type="submit" class="btn-gold">
+                            <i class="fas fa-wrench"></i> Perform Service
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if not today_service %}
+        <div class="alert alert-info mt-3 mb-0">
+            <i class="fas fa-info-circle"></i> 
+            Daily servicing earns you <strong class="gold">KSH 50</strong> every day. 
+            Make sure to perform it daily to maximize your earnings!
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Service History -->
+    <div class="card-dark">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-history gold"></i> Service History</h5>
+            <a href="{{ url_for('servicing.history') }}" class="text-gold">View All →</a>
+        </div>
+        
+        {% if history.items %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Earning</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in history.items[:10] %}
+                        <tr>
+                            <td>{{ record.service_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td class="text-success">KSH {{ "%.2f"|format(record.earning) }}</td>
+                            <td><span class="badge bg-success">Completed</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if history.pages > 1 %}
+            <div class="text-center mt-3">
+                <a href="{{ url_for('servicing.history') }}" class="text-gold">
+                    View all {{ history.total }} records →
+                </a>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-calendar-day" style="font-size: 3rem; color: #2a2a2a;"></i>
+                <p class="text-muted-custom mt-3">No service history yet</p>
+                <p class="text-muted-custom small">Start by performing your first daily servicing!</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Tips -->
+    <div class="card-dark mt-4">
+        <h6><i class="fas fa-lightbulb gold"></i> Tips</h6>
+        <ul class="text-muted-custom small mb-0">
+            <li>Perform servicing daily to earn a consistent KSH 50 per day</li>
+            <li>Over 30 days, servicing alone can earn you KSH 1,500</li>
+            <li>Combine servicing with rentals for higher daily earnings</li>
+            <li>Refer friends to earn additional commission on their earnings</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

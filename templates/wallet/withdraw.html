@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Withdraw - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent">
+            <li class="breadcrumb-item"><a href="{{ url_for('wallet.wallet') }}" class="text-gold">Wallet</a></li>
+            <li class="breadcrumb-item active text-white" aria-current="page">Withdraw</li>
+        </ol>
+    </nav>
+    
+    <h2><i class="fas fa-arrow-up-right gold"></i> Withdraw Funds</h2>
+    <p class="text-muted-custom">Withdraw your earnings to M-Pesa</p>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card-dark">
+                <div class="text-center mb-4">
+                    <div class="text-muted-custom small">Available Balance</div>
+                    <div class="display-6 gold">KSH {{ "%.2f"|format(current_user.balance or 0) }}</div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('wallet.withdraw') }}">
+                    {{ form.hidden_tag() if form else '' }}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Amount (KSH)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark text-white border-secondary">KSH</span>
+                            <input type="number" name="amount" class="form-control" placeholder="Enter amount" min="100" step="1" required>
+                        </div>
+                        <small class="text-muted-custom">Minimum: KSH 100 | Maximum: KSH 50,000</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">M-Pesa Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="254712345678" required>
+                        <small class="text-muted-custom">Enter the phone number to receive funds</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-custom">Balance after withdrawal:</span>
+                            <span id="balanceAfter">KSH {{ "%.2f"|format(current_user.balance or 0) }}</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-gold w-100">
+                        <i class="fas fa-check"></i> Withdraw Now
+                    </button>
+                </form>
+            </div>
+            
+            <div class="card-dark mt-3">
+                <h6><i class="fas fa-info-circle gold"></i> Withdrawal Information</h6>
+                <ul class="text-muted-custom small mb-0">
+                    <li>Withdrawals are processed within 24 hours</li>
+                    <li>Minimum withdrawal: KSH 100</li>
+                    <li>Maximum withdrawal: KSH 50,000 per transaction</li>
+                    <li>Funds are sent to your M-Pesa account</li>
+                    <li>No withdrawal fees charged</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card-dark">
+                <h6><i class="fas fa-clock gold"></i> Processing Time</h6>
+                <ul class="text-muted-custom small mb-0">
+                    <li><strong>M-Pesa:</strong> 1-24 hours</li>
+                    <li><strong>Weekends:</strong> May take longer</li>
+                    <li><strong>Public Holidays:</strong> Processed next business day</li>
+                </ul>
+                
+                <hr class="border-gold">
+                
+                <h6><i class="fas fa-shield-alt gold"></i> Security</h6>
+                <p class="text-muted-custom small">
+                    All withdrawals are processed securely. You will receive an SMS confirmation once processed.
+                </p>
+                
+                <hr class="border-gold">
+                
+                <h6><i class="fas fa-history gold"></i> Recent Withdrawals</h6>
+                {% if recent_withdrawals %}
+                    <div class="list-group list-group-flush">
+                        {% for withdrawal in recent_withdrawals[:5] %}
+                        <div class="list-group-item bg-transparent text-white border-secondary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-{{ 'success' if withdrawal.status == 'completed' else 'warning' if withdrawal.status == 'pending' else 'danger' }}">
+                                        {{ withdrawal.status|title }}
+                                    </span>
+                                    <span class="text-muted-custom small ms-2">{{ withdrawal.created_at.strftime('%d/%m/%Y') }}</span>
+                                </div>
+                                <div class="text-danger">KSH {{ "%.2f"|format(withdrawal.amount) }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted-custom small mb-0">No recent withdrawals</p>
+                {% endif %}
+                
+                <div class="mt-2">
+                    <a href="{{ url_for('wallet.transactions') }}" class="text-gold small">
+                        View all transactions →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.querySelector('input[name="amount"]');
+    const balanceDisplay = document.getElementById('balanceAfter');
+    const currentBalance = {{ current_user.balance or 0 }};
+    
+    if (amountInput) {
+        amountInput.addEventListener('input', function() {
+            const amount = parseFloat(this.value) || 0;
+            const newBalance = currentBalance - amount;
+            balanceDisplay.textContent = 'KSH ' + newBalance.toFixed(2);
+            
+            if (newBalance < 0) {
+                balanceDisplay.style.color = '#dc3545';
+            } else {
+                balanceDisplay.style.color = '#ffffff';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

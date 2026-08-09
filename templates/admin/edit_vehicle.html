@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Vehicle - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}" class="text-gold">Admin</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.vehicles') }}" class="text-gold">Vehicles</a></li>
+            <li class="breadcrumb-item active text-white">Edit {{ vehicle.name }}</li>
+        </ol>
+    </nav>
+    
+    <h2><i class="fas fa-edit gold"></i> Edit Vehicle: {{ vehicle.name }}</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card-dark">
+                <form method="POST" action="{{ url_for('admin.edit_vehicle', vehicle_id=vehicle.id) }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Car Name</label>
+                                <input type="text" name="name" class="form-control" value="{{ vehicle.name }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Brand</label>
+                                <input type="text" name="brand" class="form-control" value="{{ vehicle.brand }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Rental Price (KSH)</label>
+                                <input type="number" name="rental_price" class="form-control" value="{{ vehicle.rental_price }}" step="1" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Daily Earning (KSH)</label>
+                                <input type="number" name="daily_earning" class="form-control" value="{{ vehicle.daily_earning }}" step="1" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Rental Period (Days)</label>
+                                <input type="number" name="rental_period" class="form-control" value="{{ vehicle.rental_period }}" step="1" min="1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Sort Order</label>
+                                <input type="number" name="sort_order" class="form-control" value="{{ vehicle.sort_order }}" step="1" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3">{{ vehicle.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" name="is_active" class="form-check-input" id="is_active" {% if vehicle.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">Active</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" name="is_available" class="form-check-input" id="is_available" {% if vehicle.is_available %}checked{% endif %}>
+                                <label class="form-check-label" for="is_available">Available</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="border-gold">
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-gold">
+                            <i class="fas fa-save"></i> Update Vehicle
+                        </button>
+                        <a href="{{ url_for('admin.vehicles') }}" class="btn-outline-gold">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card-dark">
+                <h6><i class="fas fa-chart-bar gold"></i> Vehicle Stats</h6>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                        <span class="text-muted-custom">Total Profit</span>
+                        <span class="text-success">KSH {{ "%.2f"|format(vehicle.total_profit or (vehicle.daily_earning * 30 - vehicle.rental_price)) }}</span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                        <span class="text-muted-custom">Daily ROI</span>
+                        <span class="gold">{{ ((vehicle.daily_earning / vehicle.rental_price) * 100)|round(2) }}%</span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                        <span class="text-muted-custom">Status</span>
+                        <span>
+                            <span class="badge bg-{{ 'success' if vehicle.is_active else 'danger' }}">{{ 'Active' if vehicle.is_active else 'Inactive' }}</span>
+                            <span class="badge bg-{{ 'success' if vehicle.is_available else 'warning' }}">{{ 'Available' if vehicle.is_available else 'Unavailable' }}</span>
+                        </span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                        <span class="text-muted-custom">Total Rentals</span>
+                        <span>{{ vehicle.rentals|length }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-dark mt-3">
+                <h6><i class="fas fa-info-circle gold"></i> Tips</h6>
+                <ul class="text-muted-custom small mb-0">
+                    <li>Higher rental price = higher daily earning</li>
+                    <li>Sort order determines display order</li>
+                    <li>Total profit = (daily_earning × days) - rental_price</li>
+                    <li>Set inactive to hide from users</li>
+                    <li>Set unavailable to prevent new rentals</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

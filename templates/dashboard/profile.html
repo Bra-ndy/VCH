@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-user-circle gold"></i> My Profile</h2>
+    
+    <div class="row">
+        <!-- Profile Info -->
+        <div class="col-md-4">
+            <div class="card-dark text-center">
+                <div class="position-relative">
+                    {% if current_user.avatar %}
+                    <img src="{{ current_user.avatar }}" alt="{{ current_user.username }}" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                    <i class="fas fa-user-circle" style="font-size: 6rem; color: var(--gold);"></i>
+                    {% endif %}
+                </div>
+                <h4 class="mt-2">{{ current_user.username }}</h4>
+                <p class="text-muted-custom">{{ current_user.email }}</p>
+                
+                <hr class="border-gold">
+                
+                <div class="text-start">
+                    <p><strong><i class="fas fa-id-card gold"></i> User ID:</strong> {{ current_user.user_id }}</p>
+                    <p><strong><i class="fas fa-phone gold"></i> Phone:</strong> {{ current_user.phone or 'Not set' }}</p>
+                    <p><strong><i class="fas fa-code gold"></i> Referral Code:</strong> {{ current_user.referral_code }}</p>
+                    <p><strong><i class="fas fa-calendar gold"></i> Joined:</strong> {{ current_user.created_at.strftime('%d %B %Y') }}</p>
+                    <p><strong><i class="fas fa-level-up-alt gold"></i> Agent Level:</strong> {{ current_user.agent_level|replace('_', ' ')|title or 'None' }}</p>
+                </div>
+                
+                <hr class="border-gold">
+                
+                <div class="text-start">
+                    <p><strong><i class="fas fa-wallet gold"></i> Balance:</strong> KSH {{ "%.2f"|format(current_user.balance or 0) }}</p>
+                    <p><strong><i class="fas fa-arrow-down gold"></i> Total Deposited:</strong> KSH {{ "%.2f"|format(current_user.total_deposited or 0) }}</p>
+                    <p><strong><i class="fas fa-arrow-up gold"></i> Total Withdrawn:</strong> KSH {{ "%.2f"|format(current_user.total_withdrawn or 0) }}</p>
+                    <p><strong><i class="fas fa-chart-line gold"></i> Total Earned:</strong> KSH {{ "%.2f"|format(current_user.total_earned or 0) }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Edit Profile Form -->
+        <div class="col-md-8">
+            <div class="card-dark">
+                <h5><i class="fas fa-edit gold"></i> Edit Profile</h5>
+                <form method="POST" action="{{ url_for('dashboard.profile') }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() if form else '' }}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" value="{{ current_user.username }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+                        <small class="text-muted-custom">Email cannot be changed</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" value="{{ current_user.phone or '' }}" placeholder="254712345678">
+                        <small class="text-muted-custom">Enter with country code (e.g., 254 for Kenya)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name or '' }}" placeholder="Your full name">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Profile Picture</label>
+                        <input type="file" name="avatar" class="form-control" accept="image/*">
+                        <small class="text-muted-custom">Upload a profile picture (JPG, PNG, GIF)</small>
+                    </div>
+                    
+                    <hr class="border-gold">
+                    
+                    <h6>Change Password</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" name="current_password" class="form-control" placeholder="Enter current password">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" name="new_password" class="form-control" placeholder="Enter new password">
+                        <small class="text-muted-custom">Min 8 characters with at least one letter and one number</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" name="confirm_password" class="form-control" placeholder="Confirm new password">
+                    </div>
+                    
+                    <button type="submit" class="btn-gold w-100">
+                        <i class="fas fa-save"></i> Update Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

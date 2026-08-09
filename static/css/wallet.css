@@ -1,0 +1,199 @@
+/* Wallet specific styles */
+.wallet-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.wallet-card {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.wallet-card:hover {
+    border-color: #d4af37;
+    transform: translateY(-4px);
+}
+
+.wallet-card .amount {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #d4af37;
+}
+
+.wallet-card .label {
+    color: #9a9a9a;
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+}
+
+.wallet-card .icon {
+    font-size: 1.5rem;
+    color: #d4af37;
+    margin-bottom: 0.5rem;
+}
+
+/* Deposit/Withdraw forms */
+.payment-method-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.payment-method {
+    background: #1a1a1a;
+    border: 2px solid #2a2a2a;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-method:hover {
+    border-color: #d4af37;
+}
+
+.payment-method.selected {
+    border-color: #d4af37;
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.payment-method .method-icon {
+    font-size: 2rem;
+    color: #d4af37;
+}
+
+.payment-method .method-name {
+    font-weight: 500;
+    margin-top: 0.3rem;
+}
+
+.payment-method .method-desc {
+    color: #9a9a9a;
+    font-size: 0.7rem;
+}
+
+/* Transaction list */
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-item .txn-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.transaction-item .txn-type {
+    font-weight: 500;
+}
+
+.transaction-item .txn-date {
+    color: #9a9a9a;
+    font-size: 0.75rem;
+}
+
+.transaction-item .txn-amount {
+    font-weight: 600;
+}
+
+.transaction-item .txn-amount.credit {
+    color: #28a745;
+}
+
+.transaction-item .txn-amount.debit {
+    color: #dc3545;
+}
+
+/* Statement preview */
+.statement-header {
+    background: #1a1a1a;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.statement-header .header-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+}
+
+.statement-header .header-item .label {
+    color: #9a9a9a;
+}
+
+.statement-header .header-item .value {
+    font-weight: 500;
+}
+
+/* Quick amount buttons */
+.quick-amounts {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 0.5rem 0;
+}
+
+.quick-amounts .amount-btn {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-amounts .amount-btn:hover {
+    border-color: #d4af37;
+    color: #d4af37;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wallet-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .wallet-card .amount {
+        font-size: 1.5rem;
+    }
+    
+    .payment-method-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media print {
+    .navbar-custom, .btn-gold, .btn-outline-gold, footer {
+        display: none !important;
+    }
+    
+    .card-dark {
+        border: 1px solid #2a2a2a !important;
+    }
+    
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+    
+    .gold {
+        color: #d4af37 !important;
+    }
+}

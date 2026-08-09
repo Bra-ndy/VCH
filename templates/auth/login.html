@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Login - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card-dark">
+                <div class="text-center mb-4">
+                    <i class="fas fa-car" style="font-size: 3rem; color: var(--gold);"></i>
+                    <h2 class="mt-2">{{ app_name or 'VCH' }}</h2>
+                    <h4>Welcome Back</h4>
+                    <p class="text-muted-custom">Login to your account</p>
+                </div>
+                
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    {{ form.hidden_tag() if form else '' }}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="remember_me" class="form-check-input" id="remember_me">
+                        <label class="form-check-label" for="remember_me">Remember Me</label>
+                    </div>
+                    
+                    <button type="submit" class="btn-gold w-100">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </form>
+                
+                <hr class="border-gold my-4">
+                
+                <div class="text-center">
+                    <p class="mb-2">
+                        <a href="{{ url_for('auth.forgot_password') }}" class="gold">Forgot Password?</a>
+                    </p>
+                    <p class="mb-0">
+                        Don't have an account? <a href="{{ url_for('auth.register') }}" class="gold">Register here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

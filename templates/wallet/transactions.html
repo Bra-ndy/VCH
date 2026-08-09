@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-history gold"></i> Transaction History</h2>
+    <p class="text-muted-custom">View all your transactions</p>
+    
+    <div class="card-dark">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions.items %}
+                    <tr>
+                        <td><small>{{ txn.transaction_id[:12] }}</small></td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if txn.type == 'deposit' else 'warning' if txn.type == 'withdrawal' else 'info' }}">
+                                {{ txn.type|replace('_', ' ')|title }}
+                            </span>
+                        </td>
+                        <td class="{% if txn.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ '+' if txn.amount > 0 else '' }}KSH {{ "%.2f"|format(txn.amount) }}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if txn.status == 'completed' else 'warning' if txn.status == 'pending' else 'danger' }}">
+                                {{ txn.status|title }}
+                            </span>
+                        </td>
+                        <td><small>{{ txn.created_at.strftime('%d/%m/%Y %H:%M') }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if transactions.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if transactions.has_prev %}
+                <li class="page-item">
+                    <a class="page-link bg-dark text-white border-secondary" href="{{ url_for('wallet.transactions', page=transactions.prev_num) }}">
+                        Previous
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for page in transactions.iter_pages() %}
+                    {% if page %}
+                        <li class="page-item {% if page == transactions.page %}active{% endif %}">
+                            <a class="page-link bg-dark text-white border-secondary {% if page == transactions.page %}gold-bg{% endif %}" 
+                               href="{{ url_for('wallet.transactions', page=page) }}">
+                                {{ page }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link bg-dark text-white border-secondary">…</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if transactions.has_next %}
+                <li class="page-item">
+                    <a class="page-link bg-dark text-white border-secondary" href="{{ url_for('wallet.transactions', page=transactions.next_num) }}">
+                        Next
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

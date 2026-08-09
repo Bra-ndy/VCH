@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Referral History - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-history gold"></i> Referral History</h2>
+    <p class="text-muted-custom">All your referral earnings</p>
+    
+    <!-- Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(total_earnings) }}</div>
+                <div class="label">Total Referral Earnings</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stat-card">
+                <div class="number">{{ bonuses.total }}</div>
+                <div class="label">Total Bonuses Received</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- History Table -->
+    <div class="card-dark">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bonus in bonuses.items %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-{{ 'success' if bonus.type == 'signup_bonus' else 'info' }}">
+                                {{ bonus.type|replace('_', ' ')|title }}
+                            </span>
+                        </td>
+                        <td class="text-success">KSH {{ "%.2f"|format(bonus.amount) }}</td>
+                        <td>
+                            {% if bonus.type == 'signup_bonus' %}
+                                Signup bonus from {{ bonus.referred.username if bonus.referred else 'referral' }}
+                            {% else %}
+                                Daily commission on referral earnings
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if bonus.is_paid else 'warning' }}">
+                                {{ 'Paid' if bonus.is_paid else 'Pending' }}
+                            </span>
+                        </td>
+                        <td><small>{{ bonus.created_at.strftime('%d/%m/%Y %H:%M') }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if bonuses.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if bonuses.has_prev %}
+                <li class="page-item">
+                    <a class="page-link bg-dark text-white border-secondary" href="{{ url_for('referrals.history', page=bonuses.prev_num) }}">
+                        Previous
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for page in bonuses.iter_pages() %}
+                    {% if page %}
+                        <li class="page-item {% if page == bonuses.page %}active{% endif %}">
+                            <a class="page-link bg-dark text-white border-secondary {% if page == bonuses.page %}gold-bg{% endif %}" 
+                               href="{{ url_for('referrals.history', page=page) }}">
+                                {{ page }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link bg-dark text-white border-secondary">…</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if bonuses.has_next %}
+                <li class="page-item">
+                    <a class="page-link bg-dark text-white border-secondary" href="{{ url_for('referrals.history', page=bonuses.next_num) }}">
+                        Next
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+    
+    <!-- Back to Referrals -->
+    <div class="mt-3">
+        <a href="{{ url_for('referrals.referrals') }}" class="text-gold">
+            <i class="fas fa-arrow-left"></i> Back to Referrals
+        </a>
+    </div>
+</div>
+{% endblock %}

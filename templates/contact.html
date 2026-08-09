@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Contact - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="text-center mb-4">Contact <span class="gold">Us</span></h2>
+            <p class="text-center text-muted-custom">Have questions? We're here to help.</p>
+            
+            <div class="row g-4">
+                <!-- Contact Form -->
+                <div class="col-md-7">
+                    <div class="card-dark">
+                        <h5><i class="fas fa-paper-plane gold"></i> Send a Message</h5>
+                        <form method="POST" action="{{ url_for('contact') }}">
+                            <div class="mb-3">
+                                <label class="form-label">Your Name</label>
+                                <input type="text" name="name" class="form-control" placeholder="Enter your name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Subject</label>
+                                <input type="text" name="subject" class="form-control" placeholder="Message subject" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Message</label>
+                                <textarea name="message" class="form-control" rows="5" placeholder="Write your message here..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn-gold w-100">
+                                <i class="fas fa-paper-plane"></i> Send Message
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Contact Info -->
+                <div class="col-md-5">
+                    <div class="card-dark">
+                        <h5><i class="fas fa-address-card gold"></i> Contact Information</h5>
+                        
+                        <div class="mb-3">
+                            <div class="text-muted-custom small">Email</div>
+                            <a href="mailto:support@vch.com" class="text-gold">support@vch.com</a>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="text-muted-custom small">Phone</div>
+                            <a href="tel:+254700000000" class="text-gold">+254 700 000 000</a>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="text-muted-custom small">WhatsApp</div>
+                            <a href="https://wa.me/254700000000" class="text-gold">+254 700 000 000</a>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="text-muted-custom small">Working Hours</div>
+                            <div>Monday - Friday: 8:00 AM - 6:00 PM EAT</div>
+                            <div>Saturday: 9:00 AM - 1:00 PM EAT</div>
+                            <div>Sunday: Closed</div>
+                        </div>
+                        
+                        <hr class="border-gold">
+                        
+                        <h6><i class="fas fa-clock gold"></i> Response Time</h6>
+                        <p class="text-muted-custom small">
+                            We aim to respond to all inquiries within 24 hours during business days.
+                        </p>
+                    </div>
+                    
+                    <!-- Quick Support -->
+                    <div class="card-dark mt-3">
+                        <h6><i class="fas fa-question-circle gold"></i> Quick Support</h6>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('faq') }}" class="btn-outline-gold text-center">
+                                <i class="fas fa-book"></i> Visit FAQ
+                            </a>
+                            <a href="{{ url_for('auth.login') }}" class="btn-gold text-center">
+                                <i class="fas fa-user"></i> Login to Your Account
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

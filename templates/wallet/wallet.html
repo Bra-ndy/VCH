@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Wallet - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-wallet gold"></i> My Wallet</h2>
+    <p class="text-muted-custom">Manage your funds and transactions</p>
+    
+    <!-- Balance Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(current_user.balance or 0) }}</div>
+                <div class="label">Available Balance</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(current_user.total_deposited or 0) }}</div>
+                <div class="label">Total Deposited</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(current_user.total_withdrawn or 0) }}</div>
+                <div class="label">Total Withdrawn</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <a href="{{ url_for('wallet.deposit') }}" class="btn-gold w-100 text-center" style="padding: 1rem;">
+                <i class="fas fa-plus-circle"></i> Deposit Funds
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a href="{{ url_for('wallet.withdraw') }}" class="btn-outline-gold w-100 text-center" style="padding: 1rem;">
+                <i class="fas fa-arrow-up-right"></i> Withdraw Funds
+            </a>
+        </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="row g-3">
+        <div class="col-md-3">
+            <a href="{{ url_for('wallet.transactions') }}" class="quick-action">
+                <i class="fas fa-history"></i>
+                <span>Transactions</span>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('wallet.earnings') }}" class="quick-action">
+                <i class="fas fa-chart-line"></i>
+                <span>Earnings</span>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('wallet.statements') }}" class="quick-action">
+                <i class="fas fa-file-invoice"></i>
+                <span>Statements</span>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="#" class="quick-action">
+                <i class="fas fa-gift"></i>
+                <span>CDK Exchange</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions Preview -->
+    <div class="card-dark mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-history gold"></i> Recent Activity</h5>
+            <a href="{{ url_for('wallet.transactions') }}" class="text-gold">View All →</a>
+        </div>
+        {% if recent_transactions %}
+            <div class="list-group list-group-flush">
+                {% for txn in recent_transactions[:5] %}
+                <div class="list-group-item bg-transparent text-white border-secondary">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-{{ 'success' if txn.type == 'deposit' else 'warning' if txn.type == 'withdrawal' else 'info' }}">
+                                {{ txn.type|replace('_', ' ')|title }}
+                            </span>
+                            <span class="text-muted-custom small ms-2">{{ txn.description or '' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-{{ 'success' if txn.amount > 0 else 'danger' }}">
+                                {{ '+' if txn.amount > 0 else '' }}KSH {{ "%.2f"|format(txn.amount) }}
+                            </span>
+                            <span class="text-muted-custom small ms-2">{{ txn.created_at.strftime('%d/%m/%Y') }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center text-muted-custom mb-0">No recent transactions</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

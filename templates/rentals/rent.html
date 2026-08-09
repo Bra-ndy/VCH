@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Rent {{ vehicle.name }} - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent">
+            <li class="breadcrumb-item"><a href="{{ url_for('rentals.cars') }}" class="text-gold">Cars</a></li>
+            <li class="breadcrumb-item active text-white" aria-current="page">Rent {{ vehicle.name }}</li>
+        </ol>
+    </nav>
+    
+    <h2><i class="fas fa-car gold"></i> Rent {{ vehicle.name }}</h2>
+    
+    <div class="row">
+        <!-- Vehicle Details -->
+        <div class="col-md-6">
+            <div class="card-dark">
+                <div class="text-center mb-3">
+                    {% if vehicle.image %}
+                    <img src="{{ vehicle.image }}" alt="{{ vehicle.name }}" class="img-fluid rounded" style="max-height: 200px; width: 100%; object-fit: cover;">
+                    {% else %}
+                    <i class="fas fa-car" style="font-size: 5rem; color: var(--gold);"></i>
+                    {% endif %}
+                </div>
+                
+                <h4 class="text-center">{{ vehicle.name }}</h4>
+                <p class="text-center text-muted-custom">{{ vehicle.brand }}</p>
+                
+                <hr class="border-gold">
+                
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Rental Price</div>
+                        <div class="fw-bold">KSH {{ "%.2f"|format(vehicle.rental_price) }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Daily Earning</div>
+                        <div class="gold fw-bold">KSH {{ "%.2f"|format(vehicle.daily_earning) }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Total Profit</div>
+                        <div class="text-success fw-bold">KSH {{ "%.2f"|format(vehicle.total_profit) }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Rental Period</div>
+                        <div class="fw-bold">{{ vehicle.rental_period }} days</div>
+                    </div>
+                </div>
+                
+                {% if vehicle.description %}
+                <hr class="border-gold">
+                <p class="text-muted-custom small">{{ vehicle.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Rental Form -->
+        <div class="col-md-6">
+            <div class="card-dark">
+                <h5>Confirm Rental</h5>
+                
+                <form method="POST" action="{{ url_for('rentals.rent', vehicle_id=vehicle.id) }}">
+                    {{ form.hidden_tag() if form else '' }}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Rental Period</label>
+                        <select name="rental_period" class="form-control">
+                            <option value="30">30 Days</option>
+                        </select>
+                        <small class="text-muted-custom">Rental period is fixed at 30 days</small>
+                    </div>
+                    
+                    <hr class="border-gold">
+                    
+                    <div class="mb-3">
+                        <h6>Payment Summary</h6>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-custom">Rental Price:</span>
+                            <span>KSH {{ "%.2f"|format(vehicle.rental_price) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-custom">Daily Earning:</span>
+                            <span class="gold">KSH {{ "%.2f"|format(vehicle.daily_earning) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-custom">Total Profit:</span>
+                            <span class="text-success">KSH {{ "%.2f"|format(vehicle.total_profit) }}</span>
+                        </div>
+                    </div>
+                    
+                    <hr class="border-gold">
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-custom">Your Balance:</span>
+                            <span>KSH {{ "%.2f"|format(current_user.balance) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-custom">Cost:</span>
+                            <span class="fw-bold">KSH {{ "%.2f"|format(vehicle.rental_price) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            {% if current_user.balance >= vehicle.rental_price %}
+                                <span class="text-success">✅ Sufficient balance</span>
+                                <span class="text-success">Remaining: KSH {{ "%.2f"|format(current_user.balance - vehicle.rental_price) }}</span>
+                            {% else %}
+                                <span class="text-danger">❌ Insufficient balance</span>
+                                <span class="text-danger">Need: KSH {{ "%.2f"|format(vehicle.rental_price - current_user.balance) }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-gold w-100" {% if current_user.balance < vehicle.rental_price %}disabled{% endif %}>
+                        <i class="fas fa-check"></i> 
+                        {% if current_user.balance >= vehicle.rental_price %}
+                            Confirm Rental
+                        {% else %}
+                            Insufficient Balance
+                        {% endif %}
+                    </button>
+                    
+                    {% if current_user.balance < vehicle.rental_price %}
+                    <div class="mt-2 text-center">
+                        <a href="{{ url_for('wallet.deposit') }}" class="text-gold">
+                            <i class="fas fa-plus-circle"></i> Deposit Funds
+                        </a>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

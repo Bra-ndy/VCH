@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Earnings - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-chart-line gold"></i> My Earnings</h2>
+    <p class="text-muted-custom">Track all your earnings</p>
+    
+    <!-- Summary Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(today_earnings_total or 0) }}</div>
+                <div class="label">Today's Earnings</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(week_earnings_total or 0) }}</div>
+                <div class="label">This Week</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(month_earnings_total or 0) }}</div>
+                <div class="label">This Month</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Earnings by Type -->
+    <div class="card-dark mb-4">
+        <h5><i class="fas fa-pie-chart gold"></i> Earnings by Type</h5>
+        
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="number">KSH {{ "%.2f"|format(earnings_by_type.get('rental_earning', 0)) }}</div>
+                    <div class="label">Rental Earnings</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="number">KSH {{ "%.2f"|format(earnings_by_type.get('service_earning', 0)) }}</div>
+                    <div class="label">Service Earnings</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="number">KSH {{ "%.2f"|format(earnings_by_type.get('referral_bonus', 0)) }}</div>
+                    <div class="label">Referral Bonus</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="number">KSH {{ "%.2f"|format(earnings_by_type.get('agent_salary', 0)) }}</div>
+                    <div class="label">Agent Salary</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Daily Earnings Chart (visual) -->
+    <div class="card-dark mb-4">
+        <h5><i class="fas fa-calendar-day gold"></i> Daily Earnings (Last 7 Days)</h5>
+        <div class="row g-2">
+            {% set days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+            {% set earnings = [0, 0, 0, 0, 0, 0, 0] %}
+            
+            {% for day in days %}
+            <div class="col" style="text-align: center;">
+                <div class="text-muted-custom small">{{ day }}</div>
+                <div style="height: 100px; display: flex; align-items: flex-end; justify-content: center;">
+                    <div style="width: 30px; background: var(--gold); height: {{ (earnings[loop.index0] / 500 * 100)|round|int if earnings[loop.index0] > 0 else 5 }}px; border-radius: 4px 4px 0 0;"></div>
+                </div>
+                <div class="text-muted-custom small">KSH {{ "%.0f"|format(earnings[loop.index0]) }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center text-muted-custom small mt-2">
+            <i class="fas fa-info-circle"></i> Data from daily earnings records
+        </div>
+    </div>
+    
+    <!-- Earnings History -->
+    <div class="card-dark">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-history gold"></i> Earnings History</h5>
+            <a href="{{ url_for('wallet.transactions') }}" class="text-gold">View All →</a>
+        </div>
+        
+        {% if earnings_history %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for earning in earnings_history[:10] %}
+                        <tr>
+                            <td>{{ earning.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'info' if 'rental' in earning.type else 'success' if 'service' in earning.type else 'warning' if 'referral' in earning.type else 'gold' }}">
+                                    {{ earning.type|replace('_', ' ')|title }}
+                                </span>
+                            </td>
+                            <td class="text-success">KSH {{ "%.2f"|format(earning.amount) }}</td>
+                            <td class="text-muted-custom small">{{ earning.description or '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-chart-line" style="font-size: 3rem; color: #2a2a2a;"></i>
+                <p class="text-muted-custom mt-3">No earnings yet</p>
+                <p class="text-muted-custom small">Start renting cars or performing servicing to earn!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

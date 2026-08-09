@@ -1,0 +1,128 @@
+/* Referrals specific styles */
+.invite-box {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.invite-box .invite-code {
+    background: #0d0d0d;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px dashed #d4af37;
+    font-family: monospace;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    color: #d4af37;
+    text-align: center;
+}
+
+.agent-level-card {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.agent-level-card:hover {
+    border-color: #d4af37;
+    transform: translateY(-4px);
+}
+
+.agent-level-card .level-icon {
+    font-size: 2.5rem;
+    color: #d4af37;
+    margin-bottom: 0.5rem;
+}
+
+.agent-level-card .level-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.agent-level-card .level-members {
+    color: #9a9a9a;
+    font-size: 0.9rem;
+}
+
+.agent-level-card .level-salary {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #d4af37;
+    margin: 0.5rem 0;
+}
+
+.agent-level-card .level-perks {
+    color: #9a9a9a;
+    font-size: 0.85rem;
+}
+
+.agent-level-card.featured {
+    border-color: #d4af37;
+    box-shadow: 0 4px 30px rgba(212, 175, 55, 0.1);
+}
+
+.progress-bar-gold {
+    background-color: #d4af37;
+    height: 8px;
+    border-radius: 4px;
+}
+
+.progress-track {
+    background: #2a2a2a;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.referral-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.referral-stat {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.referral-stat .number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #d4af37;
+}
+
+.referral-stat .label {
+    color: #9a9a9a;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .invite-box .input-group {
+        flex-direction: column;
+    }
+    
+    .invite-box .input-group .form-control {
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .invite-box .input-group .btn-gold {
+        border-radius: 0.5rem;
+        width: 100%;
+    }
+    
+    .referral-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

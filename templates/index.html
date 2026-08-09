@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Home - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="row align-items-center min-vh-75">
+        <div class="col-lg-6">
+            <h1 class="display-1 fw-bold">
+                <span class="gold">VCH</span>
+                <small class="d-block text-muted-custom" style="font-size: 1.5rem;">Virtual Car Hire</small>
+            </h1>
+            <p class="lead text-muted-custom" style="max-width: 500px;">
+                Virtual investment platform designed to help members grow their savings through car rentals, servicing, and referrals.
+            </p>
+            <div class="mt-4">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('dashboard') }}" class="btn-gold me-3">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.register') }}" class="btn-gold me-3">
+                        <i class="fas fa-user-plus"></i> Get Started
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn-outline-gold">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4 d-flex gap-4">
+                <div>
+                    <div class="h4 gold">8+</div>
+                    <div class="text-muted-custom small">Luxury Cars</div>
+                </div>
+                <div>
+                    <div class="h4 gold">KSH 150-500</div>
+                    <div class="text-muted-custom small">Daily Earnings</div>
+                </div>
+                <div>
+                    <div class="h4 gold">10%</div>
+                    <div class="text-muted-custom small">Referral Bonus</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mt-4 mt-lg-0">
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="card-dark text-center">
+                        <i class="fas fa-car" style="font-size: 2.5rem; color: var(--gold);"></i>
+                        <h5 class="mt-2">Rent & Earn</h5>
+                        <p class="text-muted-custom small">Rent cars and earn daily</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card-dark text-center">
+                        <i class="fas fa-wrench" style="font-size: 2.5rem; color: var(--gold);"></i>
+                        <h5 class="mt-2">Daily Servicing</h5>
+                        <p class="text-muted-custom small">Earn KSH 50 per day</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card-dark text-center">
+                        <i class="fas fa-users" style="font-size: 2.5rem; color: var(--gold);"></i>
+                        <h5 class="mt-2">Referrals</h5>
+                        <p class="text-muted-custom small">10% Bonus + 2% Commission</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card-dark text-center">
+                        <i class="fas fa-trophy" style="font-size: 2.5rem; color: var(--gold);"></i>
+                        <h5 class="mt-2">Agent Levels</h5>
+                        <p class="text-muted-custom small">Earn monthly salary</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Car List -->
+    <h2 class="text-center mt-5 mb-4">Available <span class="gold">Cars</span></h2>
+    <div class="row g-3">
+        {% set cars = [
+            {'name': 'Ferrari', 'icon': 'fa-crown', 'daily': '500', 'price': '10,000'},
+            {'name': 'Porsche', 'icon': 'fa-bolt', 'daily': '400', 'price': '8,000'},
+            {'name': 'Jaguar', 'icon': 'fa-gem', 'daily': '350', 'price': '7,000'},
+            {'name': 'Mercedes', 'icon': 'fa-star', 'daily': '290', 'price': '5,500'},
+            {'name': 'BMW', 'icon': 'fa-car', 'daily': '230', 'price': '4,000'},
+            {'name': 'Isuzu', 'icon': 'fa-truck', 'daily': '200', 'price': '3,500'},
+            {'name': 'Mazda', 'icon': 'fa-route', 'daily': '170', 'price': '3,000'},
+            {'name': 'Toyota', 'icon': 'fa-shield-alt', 'daily': '150', 'price': '2,500'}
+        ] %}
+        
+        {% for car in cars %}
+        <div class="col-6 col-md-3">
+            <div class="card-dark text-center">
+                <i class="fas {{ car.icon }}" style="font-size: 2rem; color: var(--gold);"></i>
+                <h6 class="mt-2">{{ car.name }}</h6>
+                <div class="gold fw-bold">KSH {{ car.daily }}/day</div>
+                <small class="text-muted-custom">KSH {{ car.price }} · 30d</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Agent Levels -->
+    <h2 class="text-center mt-5 mb-4">Agent <span class="gold">Levels</span></h2>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card-dark text-center">
+                <h5 class="gold">Junior Agent</h5>
+                <div class="display-6 fw-bold gold">20</div>
+                <div class="text-muted-custom small">Members Required</div>
+                <hr class="border-gold">
+                <div class="fw-bold">KSH 20,000</div>
+                <div class="text-muted-custom small">Monthly Salary</div>
+                <div class="text-muted-custom small mt-2">No extra perks</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-dark text-center" style="border-color: var(--gold);">
+                <h5 class="gold">Level 1 Agent</h5>
+                <div class="display-6 fw-bold gold">50</div>
+                <div class="text-muted-custom small">Members Required</div>
+                <hr class="border-gold">
+                <div class="fw-bold">KSH 50,000</div>
+                <div class="text-muted-custom small">Monthly Salary</div>
+                <div class="text-muted-custom small mt-2">+ Team dinner</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-dark text-center" style="border-color: var(--gold);">
+                <h5 class="gold">Level 2 Agent</h5>
+                <div class="display-6 fw-bold gold">100</div>
+                <div class="text-muted-custom small">Members Required</div>
+                <hr class="border-gold">
+                <div class="fw-bold">KSH 100,000</div>
+                <div class="text-muted-custom small">Monthly Salary</div>
+                <div class="text-muted-custom small mt-2">+ Team dinner</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,192 @@
+/* Dashboard specific styles */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-stat {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.dashboard-stat:hover {
+    border-color: #d4af37;
+    transform: translateY(-4px);
+}
+
+.dashboard-stat .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #d4af37;
+}
+
+.dashboard-stat .label {
+    color: #9a9a9a;
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+}
+
+.dashboard-stat .icon {
+    font-size: 1.5rem;
+    color: #d4af37;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.dashboard-action {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+    color: #ffffff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.dashboard-action:hover {
+    border-color: #d4af37;
+    transform: translateY(-2px);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.dashboard-action i {
+    font-size: 1.5rem;
+    color: #d4af37;
+    display: block;
+    margin-bottom: 0.3rem;
+}
+
+.dashboard-action span {
+    font-size: 0.8rem;
+}
+
+/* Activity feed */
+.activity-feed {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    padding: 0.75rem 1rem;
+    border-left: 3px solid #d4af37;
+    margin-bottom: 0.5rem;
+    background: #0d0d0d;
+    border-radius: 0.5rem;
+}
+
+.activity-item .time {
+    font-size: 0.7rem;
+    color: #9a9a9a;
+}
+
+.activity-item .message {
+    font-size: 0.9rem;
+}
+
+/* Balance card */
+.balance-card {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+    border: 1px solid #d4af37;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    text-align: center;
+}
+
+.balance-card .amount {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #d4af37;
+}
+
+.balance-card .label {
+    color: #9a9a9a;
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-stat .value {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-actions {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .balance-card .amount {
+        font-size: 2rem;
+    }
+}
+
+/* Notification badge */
+.notification-badge {
+    position: relative;
+}
+
+.notification-badge .badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: #ffffff;
+    border-radius: 50%;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+}
+
+/* Quick action buttons */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.5rem;
+}
+
+.quick-actions .action-btn {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 0.75rem;
+    padding: 1rem 0.5rem;
+    text-align: center;
+    color: #ffffff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.quick-actions .action-btn:hover {
+    border-color: #d4af37;
+    transform: translateY(-2px);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.quick-actions .action-btn i {
+    font-size: 1.5rem;
+    color: #d4af37;
+    display: block;
+    margin-bottom: 0.3rem;
+}
+
+.quick-actions .action-btn span {
+    font-size: 0.7rem;
+}
+
+@media (max-width: 768px) {
+    .quick-actions {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}FAQ - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="text-center mb-4">Frequently Asked <span class="gold">Questions</span></h2>
+            
+            <div class="accordion" id="faqAccordion">
+                <!-- FAQ 1 -->
+                <div class="accordion-item bg-dark text-white border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            <span class="gold">What is VCH?</span>
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted-custom">
+                            VCH is a virtual investment platform designed to help members grow their savings through virtual car rentals, daily servicing, and referrals. It is entirely virtual and focuses on helping members save and grow their funds.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ 2 -->
+                <div class="accordion-item bg-dark text-white border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            <span class="gold">How do I earn money?</span>
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted-custom">
+                            You can earn through:
+                            <ul class="mb-0">
+                                <li><strong>Car Rentals:</strong> Rent virtual cars and earn daily income (KSH 150-500 per day)</li>
+                                <li><strong>Daily Servicing:</strong> Perform daily servicing to earn KSH 50 per day</li>
+                                <li><strong>Referrals:</strong> Earn 10% bonus on referred members' first purchase</li>
+                                <li><strong>Agent Levels:</strong> Become an agent and earn monthly salary</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ 3 -->
+                <div class="accordion-item bg-dark text-white border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            <span class="gold">How much can I earn per day?</span>
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted-custom">
+                            Your daily earnings depend on your activities:
+                            <ul class="mb-0">
+                                <li><strong>Car Rentals:</strong> KSH 150-500 per car per day</li>
+                                <li><strong>Servicing:</strong> KSH 50 per day</li>
+                                <li><strong>Referral Commission:</strong> 2% of your referrals' daily earnings</li>
+                                <li>You can rent multiple cars to increase your daily earnings</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ 4 -->
+                <div class="accordion-item bg-dark text-white border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            <span class="gold">What are the agent levels?</span>
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted-custom">
+                            <ul class="mb-0">
+                                <li><strong>Junior Agent:</strong> Recruit 20 members → KSH 20,000/month</li>
+                                <li><strong>Level 1 Agent:</strong> Recruit 50 members → KSH 50,000/month + team dinner</li>
+                                <li><strong>Level 2 Agent:</strong> Recruit 100 members → KSH 100,000/month + team dinner</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ 5 -->
+                <div class="accordion-item bg-dark text-white border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                            <span class="gold">How do I deposit funds?</span>
+                        </button>
+                    </h2>
+                    <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted-custom">
+                            You can deposit funds via:
+                            <ul class="mb-0">
+                                <li><strong>M-Pesa:</strong> Instant deposits using your phone</li>
+                                <li><strong>Bank Transfer:</strong> Processed within 1-24 hours</li>
+                            </ul>
+                            Minimum deposit is KSH 10.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ 6 -->
+                <div class="accordion-item bg-dark text-white border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                            <span class="gold">How do I withdraw funds?</span>
+                        </button>
+                    </h2>
+                    <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted-custom">
+                            Withdrawals are processed to your M-Pesa account:
+                            <ul class="mb-0">
+                                <li><strong>Minimum:</strong> KSH 100</li>
+                                <li><strong>Maximum:</strong> KSH 50,000 per transaction</li>
+                                <li><strong>Processing Time:</strong> 1-24 hours</li>
+                                <li>No withdrawal fees charged</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ 7 -->
+                <div class="accordion-item bg-dark text-white border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                            <span class="gold">Is VCH safe and legitimate?</span>
+                        </button>
+                    </h2>
+                    <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted-custom">
+                            Yes, VCH is a legitimate virtual investment platform. We prioritize security and transparency:
+                            <ul class="mb-0">
+                                <li>All transactions are tracked and recorded</li>
+                                <li>Secure payment processing via M-Pesa</li>
+                                <li>24/7 customer support available</li>
+                                <li>Regular audits and compliance checks</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ 8 -->
+                <div class="accordion-item bg-dark text-white border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                            <span class="gold">How do I contact support?</span>
+                        </button>
+                    </h2>
+                    <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted-custom">
+                            You can contact us through:
+                            <ul class="mb-0">
+                                <li><strong>Email:</strong> <a href="mailto:support@vch.com" class="text-gold">support@vch.com</a></li>
+                                <li><strong>Phone:</strong> <a href="tel:+254700000000" class="text-gold">+254 700 000 000</a></li>
+                                <li><strong>Live Chat:</strong> Available on our website</li>
+                                <li><strong>WhatsApp:</strong> <a href="https://wa.me/254700000000" class="text-gold">+254 700 000 000</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

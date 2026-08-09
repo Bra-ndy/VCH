@@ -1,0 +1,189 @@
+/* Servicing specific styles */
+.service-card {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.service-card:hover {
+    border-color: #d4af37;
+    box-shadow: 0 4px 30px rgba(212, 175, 55, 0.1);
+}
+
+.service-card .service-icon {
+    font-size: 3rem;
+    color: #d4af37;
+    margin-bottom: 0.5rem;
+}
+
+.service-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-weight: 600;
+}
+
+.service-status.done {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+}
+
+.service-status.pending {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.service-status .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.service-status.done .dot {
+    background: #28a745;
+}
+
+.service-status.pending .dot {
+    background: #ffc107;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+.service-timer {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #d4af37;
+    font-variant-numeric: tabular-nums;
+}
+
+.service-streak {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.service-streak .streak-icon {
+    color: #ff6b35;
+    font-size: 1.5rem;
+}
+
+.service-streak .streak-count {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.service-streak .streak-label {
+    color: #9a9a9a;
+    font-size: 0.8rem;
+}
+
+/* Calendar view for service history */
+.service-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin: 1rem 0;
+}
+
+.service-calendar .day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a1a;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    color: #9a9a9a;
+    transition: all 0.2s ease;
+}
+
+.service-calendar .day.has-service {
+    background: rgba(212, 175, 55, 0.2);
+    color: #d4af37;
+}
+
+.service-calendar .day.today {
+    border: 2px solid #d4af37;
+}
+
+.service-calendar .day .day-label {
+    font-size: 0.6rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .service-timer {
+        font-size: 1.5rem;
+    }
+    
+    .service-calendar {
+        gap: 2px;
+    }
+    
+    .service-calendar .day {
+        font-size: 0.65rem;
+    }
+}
+
+/* Earning animation */
+@keyframes earningPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); color: #d4af37; }
+    100% { transform: scale(1); }
+}
+
+.earning-pop {
+    animation: earningPop 0.5s ease;
+}
+
+/* History filter */
+.filter-section {
+    background: #1a1a1a;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-section .filter-label {
+    color: #9a9a9a;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Service tips */
+.tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.tip-item {
+    background: #1a1a1a;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    border-left: 3px solid #d4af37;
+}
+
+.tip-item .tip-icon {
+    color: #d4af37;
+    margin-right: 0.5rem;
+}
+
+.tip-item .tip-text {
+    color: #9a9a9a;
+    font-size: 0.85rem;
+}

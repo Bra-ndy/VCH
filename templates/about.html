@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}About - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="text-center mb-4">About <span class="gold">VCH</span></h2>
+            
+            <div class="card-dark">
+                <h4><i class="fas fa-info-circle gold"></i> What is VCH?</h4>
+                <p class="text-muted-custom">
+                    VCH is a virtual investment platform designed to help members grow their savings. 
+                    Members can increase their earnings through activities such as vehicle repairs, 
+                    virtual car rentals, and by referring other people to join the platform.
+                </p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Please note:</strong> This is not a physical car hire service. 
+                    It is entirely virtual and focuses solely on helping members save and grow their 
+                    funds through referrals, repairs, and virtual rentals.
+                </div>
+            </div>
+            
+            <div class="card-dark mt-4">
+                <h4><i class="fas fa-rocket gold"></i> How It Works</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="text-center p-3" style="background: #1a1a1a; border-radius: 0.75rem;">
+                            <i class="fas fa-car" style="font-size: 2rem; color: var(--gold);"></i>
+                            <h6 class="mt-2">1. Rent a Car</h6>
+                            <p class="text-muted-custom small">Choose from 8 luxury cars and earn daily income</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-center p-3" style="background: #1a1a1a; border-radius: 0.75rem;">
+                            <i class="fas fa-wrench" style="font-size: 2rem; color: var(--gold);"></i>
+                            <h6 class="mt-2">2. Daily Servicing</h6>
+                            <p class="text-muted-custom small">Perform servicing daily to earn KSH 50</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-center p-3" style="background: #1a1a1a; border-radius: 0.75rem;">
+                            <i class="fas fa-users" style="font-size: 2rem; color: var(--gold);"></i>
+                            <h6 class="mt-2">3. Refer Friends</h6>
+                            <p class="text-muted-custom small">Earn 10% bonus + 2% daily commission</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-center p-3" style="background: #1a1a1a; border-radius: 0.75rem;">
+                            <i class="fas fa-trophy" style="font-size: 2rem; color: var(--gold);"></i>
+                            <h6 class="mt-2">4. Become an Agent</h6>
+                            <p class="text-muted-custom small">Reach agent levels and earn monthly salary</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-dark mt-4">
+                <h4><i class="fas fa-car gold"></i> Our Fleet</h4>
+                <div class="row g-2">
+                    <div class="col-4 col-md-3 text-center">
+                        <i class="fas fa-crown gold" style="font-size: 1.5rem;"></i>
+                        <div class="small">Ferrari</div>
+                    </div>
+                    <div class="col-4 col-md-3 text-center">
+                        <i class="fas fa-bolt gold" style="font-size: 1.5rem;"></i>
+                        <div class="small">Porsche</div>
+                    </div>
+                    <div class="col-4 col-md-3 text-center">
+                        <i class="fas fa-gem gold" style="font-size: 1.5rem;"></i>
+                        <div class="small">Jaguar</div>
+                    </div>
+                    <div class="col-4 col-md-3 text-center">
+                        <i class="fas fa-star gold" style="font-size: 1.5rem;"></i>
+                        <div class="small">Mercedes</div>
+                    </div>
+                    <div class="col-4 col-md-3 text-center">
+                        <i class="fas fa-car gold" style="font-size: 1.5rem;"></i>
+                        <div class="small">BMW</div>
+                    </div>
+                    <div class="col-4 col-md-3 text-center">
+                        <i class="fas fa-truck gold" style="font-size: 1.5rem;"></i>
+                        <div class="small">Isuzu</div>
+                    </div>
+                    <div class="col-4 col-md-3 text-center">
+                        <i class="fas fa-route gold" style="font-size: 1.5rem;"></i>
+                        <div class="small">Mazda</div>
+                    </div>
+                    <div class="col-4 col-md-3 text-center">
+                        <i class="fas fa-shield-alt gold" style="font-size: 1.5rem;"></i>
+                        <div class="small">Toyota</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

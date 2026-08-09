@@ -1,0 +1,171 @@
+/* Admin specific styles */
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.admin-stat-card {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.admin-stat-card:hover {
+    border-color: #d4af37;
+    transform: translateY(-4px);
+}
+
+.admin-stat-card .number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #d4af37;
+}
+
+.admin-stat-card .label {
+    color: #9a9a9a;
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+}
+
+.admin-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.admin-action-btn {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+    color: #ffffff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.admin-action-btn:hover {
+    border-color: #d4af37;
+    transform: translateY(-2px);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.admin-action-btn i {
+    font-size: 1.5rem;
+    color: #d4af37;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* Admin table styles */
+.admin-table-wrapper {
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #141414;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.admin-table th {
+    background: #1a1a1a;
+    color: #d4af37;
+    padding: 0.8rem 1rem;
+    text-align: left;
+    border-bottom: 2px solid #2a2a2a;
+}
+
+.admin-table td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid #2a2a2a;
+    color: #ffffff;
+}
+
+.admin-table tr:hover td {
+    background: #1a1a1a;
+}
+
+.admin-table .actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.admin-table .actions .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+}
+
+/* Form styles for admin */
+.admin-form .form-control {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    color: #ffffff;
+    padding: 0.7rem 1rem;
+    border-radius: 0.5rem;
+    width: 100%;
+}
+
+.admin-form .form-control:focus {
+    border-color: #d4af37;
+    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+}
+
+.admin-form .form-label {
+    color: #9a9a9a;
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+    display: block;
+}
+
+.admin-form .form-text {
+    color: #6a6a6a;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+}
+
+/* Status badges */
+.badge-active {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+}
+
+.badge-inactive {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+}
+
+.badge-pending {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+
+.badge-completed {
+    background: rgba(23, 162, 184, 0.2);
+    color: #17a2b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .admin-stat-card .number {
+        font-size: 1.8rem;
+    }
+    
+    .admin-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Vehicles - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-car gold"></i> Manage Vehicles</h2>
+        <a href="{{ url_for('admin.add_vehicle') }}" class="btn-gold">
+            <i class="fas fa-plus"></i> Add Vehicle
+        </a>
+    </div>
+    
+    <div class="card-dark">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Brand</th>
+                        <th>Rental Price</th>
+                        <th>Daily Earning</th>
+                        <th>Profit</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehicle in vehicles %}
+                    <tr>
+                        <td>{{ vehicle.sort_order }}</td>
+                        <td><strong>{{ vehicle.name }}</strong></td>
+                        <td>{{ vehicle.brand }}</td>
+                        <td>KSH {{ "%.2f"|format(vehicle.rental_price) }}</td>
+                        <td class="gold">KSH {{ "%.2f"|format(vehicle.daily_earning) }}</td>
+                        <td class="text-success">KSH {{ "%.2f"|format(vehicle.total_profit or (vehicle.daily_earning * 30 - vehicle.rental_price)) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if vehicle.is_active else 'danger' }}">
+                                {{ 'Active' if vehicle.is_active else 'Inactive' }}
+                            </span>
+                            <br>
+                            <span class="badge bg-{{ 'success' if vehicle.is_available else 'warning' }}">
+                                {{ 'Available' if vehicle.is_available else 'Unavailable' }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin.edit_vehicle', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-outline-gold">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('admin.delete_vehicle', vehicle_id=vehicle.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this vehicle?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}" class="text-gold">Admin</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.users') }}" class="text-gold">Users</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.view_user', user_id=user.id) }}" class="text-gold">{{ user.username }}</a></li>
+            <li class="breadcrumb-item active text-white">Edit</li>
+        </ol>
+    </nav>
+    
+    <h2><i class="fas fa-edit gold"></i> Edit User: {{ user.username }}</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card-dark">
+                <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" value="{{ user.phone or '' }}">
+                    </div>
+                    
+                    <hr class="border-gold">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Password (Leave blank to keep current)</label>
+                        <input type="password" name="password" class="form-control" placeholder="Enter new password">
+                        <small class="text-muted-custom">Only enter if you want to change the password</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" name="is_active" class="form-check-input" id="is_active" {% if user.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">Active</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" name="is_verified" class="form-check-input" id="is_verified" {% if user.is_verified %}checked{% endif %}>
+                                <label class="form-check-label" for="is_verified">Verified</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Agent Level</label>
+                        <select name="agent_level" class="form-control">
+                            <option value="none" {% if user.agent_level == 'none' %}selected{% endif %}>None</option>
+                            <option value="junior" {% if user.agent_level == 'junior' %}selected{% endif %}>Junior Agent</option>
+                            <option value="level1" {% if user.agent_level == 'level1' %}selected{% endif %}>Level 1 Agent</option>
+                            <option value="level2" {% if user.agent_level == 'level2' %}selected{% endif %}>Level 2 Agent</option>
+                        </select>
+                    </div>
+                    
+                    <hr class="border-gold">
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-gold">
+                            <i class="fas fa-save"></i> Update User
+                        </button>
+                        <a href="{{ url_for('admin.view_user', user_id=user.id) }}" class="btn-outline-gold">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card-dark">
+                <h6><i class="fas fa-info-circle gold"></i> User Information</h6>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                        <span class="text-muted-custom">User ID</span>
+                        <span>{{ user.user_id }}</span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                        <span class="text-muted-custom">Joined</span>
+                        <span>{{ user.created_at.strftime('%d/%m/%Y') }}</span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                        <span class="text-muted-custom">Balance</span>
+                        <span class="gold">KSH {{ "%.2f"|format(user.balance or 0) }}</span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                        <span class="text-muted-custom">Referrals</span>
+                        <span>{{ user.referral_count }}</span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between">
+                        <span class="text-muted-custom">Referral Code</span>
+                        <span class="gold">{{ user.referral_code }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-dark mt-3">
+                <h6><i class="fas fa-shield-alt gold"></i> Security</h6>
+                <ul class="text-muted-custom small mb-0">
+                    <li>Password is hashed and stored securely</li>
+                    <li>Leave password blank to keep current</li>
+                    <li>Active users can login</li>
+                    <li>Verified users have full access</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

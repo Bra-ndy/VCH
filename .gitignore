@@ -1,0 +1,33 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.env
+.env.local
+.env.production
+ECHO is on.
+# Database
+*.db
+*.sqlite
+*.sqlite3
+ECHO is on.
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+ECHO is on.
+# Logs
+*.log
+logs/
+ECHO is on.
+# Uploads
+static/uploads/
+ECHO is on.
+# OS
+.DS_Store
+Thumbs.db

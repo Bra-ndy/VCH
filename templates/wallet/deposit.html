@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Deposit - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent">
+            <li class="breadcrumb-item"><a href="{{ url_for('wallet.wallet') }}" class="text-gold">Wallet</a></li>
+            <li class="breadcrumb-item active text-white" aria-current="page">Deposit</li>
+        </ol>
+    </nav>
+    
+    <h2><i class="fas fa-plus-circle gold"></i> Deposit Funds</h2>
+    <p class="text-muted-custom">Add funds to your wallet</p>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card-dark">
+                <div class="text-center mb-4">
+                    <div class="text-muted-custom small">Current Balance</div>
+                    <div class="display-6 gold">KSH {{ "%.2f"|format(current_user.balance or 0) }}</div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('wallet.deposit') }}" id="depositForm">
+                    {{ form.hidden_tag() if form else '' }}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Amount (KSH)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark text-white border-secondary">KSH</span>
+                            <input type="number" name="amount" class="form-control" placeholder="Enter amount" min="10" step="1" required>
+                        </div>
+                        <small class="text-muted-custom">Minimum deposit: KSH 10</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select name="payment_method" class="form-control" id="paymentMethod" required>
+                            <option value="mpesa">M-Pesa (STK Push)</option>
+                            <option value="bank">Bank Transfer</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="phoneField">
+                        <label class="form-label">M-Pesa Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="0700333444" id="phoneInput">
+                        <small class="text-muted-custom">Enter the phone number registered with M-Pesa</small>
+                        <div id="phoneError" class="text-danger small mt-1" style="display:none;">Please enter a valid phone number</div>
+                    </div>
+                    
+                    <button type="submit" class="btn-gold w-100" id="submitBtn">
+                        <i class="fas fa-check"></i> Deposit Now
+                    </button>
+                </form>
+            </div>
+            
+            <div class="card-dark mt-3">
+                <h6><i class="fas fa-info-circle gold"></i> How It Works</h6>
+                <ol class="text-muted-custom small mb-0">
+                    <li>Enter the amount you want to deposit</li>
+                    <li>Select M-Pesa as payment method</li>
+                    <li>Enter your M-Pesa phone number</li>
+                    <li>You'll receive a prompt on your phone to enter your PIN</li>
+                    <li>Funds will be credited instantly upon confirmation</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card-dark">
+                <h6><i class="fas fa-shield-alt gold"></i> Secure Deposits</h6>
+                <p class="text-muted-custom small">All deposits are processed securely through our payment partners.</p>
+                
+                <hr class="border-gold">
+                
+                <h6><i class="fas fa-clock gold"></i> Processing Time</h6>
+                <ul class="text-muted-custom small mb-0">
+                    <li><strong>M-Pesa:</strong> Instant (1-2 minutes)</li>
+                    <li><strong>Bank Transfer:</strong> 1-24 hours</li>
+                </ul>
+                
+                <hr class="border-gold">
+                
+                <h6><i class="fas fa-question-circle gold"></i> Need Help?</h6>
+                <p class="text-muted-custom small">
+                    Contact our support team at 
+                    <a href="mailto:support@vch.com" class="text-gold">support@vch.com</a>
+                </p>
+            </div>
+            
+            <div class="card-dark mt-3">
+                <h6><i class="fas fa-history gold"></i> Recent Deposits</h6>
+                <div id="recentDeposits">
+                    <p class="text-muted-custom small mb-0">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethod = document.getElementById('paymentMethod');
+    const phoneField = document.getElementById('phoneField');
+    const phoneInput = document.getElementById('phoneInput');
+    const phoneError = document.getElementById('phoneError');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    function validatePhone(phone) {
+        // Remove any non-digit characters
+        phone = phone.replace(/\D/g, '');
+        // Check if it's a valid Kenyan number
+        if (phone.length === 10 && phone.startsWith('0')) {
+            return true;
+        }
+        if (phone.length === 12 && phone.startsWith('254')) {
+            return true;
+        }
+        if (phone.length === 9) {
+            return true;
+        }
+        return false;
+    }
+    
+    paymentMethod.addEventListener('change', function() {
+        if (this.value === 'mpesa') {
+            phoneField.style.display = 'block';
+            phoneInput.required = true;
+        } else {
+            phoneField.style.display = 'none';
+            phoneInput.required = false;
+        }
+    });
+    
+    phoneInput.addEventListener('input', function() {
+        if (validatePhone(this.value)) {
+            phoneError.style.display = 'none';
+        } else if (this.value.length > 0) {
+            phoneError.style.display = 'block';
+        } else {
+            phoneError.style.display = 'none';
+        }
+    });
+    
+    // Trigger on load
+    paymentMethod.dispatchEvent(new Event('change'));
+    
+    // Form validation
+    document.getElementById('depositForm').addEventListener('submit', function(e) {
+        if (paymentMethod.value === 'mpesa') {
+            if (!validatePhone(phoneInput.value)) {
+                e.preventDefault();
+                phoneError.style.display = 'block';
+                phoneInput.focus();
+                return false;
+            }
+        }
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        setTimeout(function() {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-check"></i> Deposit Now';
+        }, 30000); // Re-enable after 30 seconds
+    });
+});
+</script>
+{% endblock %}

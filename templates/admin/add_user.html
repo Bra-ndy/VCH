@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Add User - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}" class="text-gold">Admin</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.users') }}" class="text-gold">Users</a></li>
+            <li class="breadcrumb-item active text-white">Add User</li>
+        </ol>
+    </nav>
+    
+    <h2><i class="fas fa-user-plus gold"></i> Add New User</h2>
+    <p class="text-muted-custom">Create a new user account manually</p>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card-dark">
+                <form method="POST" action="{{ url_for('admin.add_user') }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Username <span class="text-danger">*</span></label>
+                                <input type="text" name="username" class="form-control" placeholder="Enter username" required>
+                                <small class="text-muted-custom">Must be unique</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" name="full_name" class="form-control" placeholder="Enter full name">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+                                <small class="text-muted-custom">Must be unique</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" name="phone" class="form-control" placeholder="0703338493" required>
+                                <small class="text-muted-custom">Enter Kenyan number (e.g., 0703338493 or 254703338493)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password" class="form-control" placeholder="Min 8 characters" required>
+                                <small class="text-muted-custom">Must contain at least 8 characters</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Initial Balance (KSH)</label>
+                                <input type="number" name="balance" class="form-control" placeholder="0" value="0" step="1" min="0">
+                                <small class="text-muted-custom">Optional starting balance</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Agent Level</label>
+                                <select name="agent_level" class="form-control">
+                                    <option value="none">None</option>
+                                    <option value="junior">Junior Agent</option>
+                                    <option value="level1">Level 1 Agent</option>
+                                    <option value="level2">Level 2 Agent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Referral Code (Optional)</label>
+                                <input type="text" name="referral_code" class="form-control" placeholder="Enter referral code">
+                                <small class="text-muted-custom">Referrer's referral code</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" name="is_active" class="form-check-input" id="is_active" checked>
+                                <label class="form-check-label" for="is_active">Active</label>
+                                <br>
+                                <small class="text-muted-custom">Active users can login</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" name="is_verified" class="form-check-input" id="is_verified" checked>
+                                <label class="form-check-label" for="is_verified">Verified</label>
+                                <br>
+                                <small class="text-muted-custom">Verified users have full access</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="border-gold">
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-gold">
+                            <i class="fas fa-user-plus"></i> Create User
+                        </button>
+                        <a href="{{ url_for('admin.users') }}" class="btn-outline-gold">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card-dark">
+                <h6><i class="fas fa-info-circle gold"></i> Information</h6>
+                <ul class="text-muted-custom small mb-0">
+                    <li>All fields marked with <span class="text-danger">*</span> are required</li>
+                    <li>The user will receive a welcome notification</li>
+                    <li>If a referral code is provided, the referrer will get credit</li>
+                    <li>Initial balance is optional - set to 0 for new users</li>
+                    <li>Verified users can immediately access all features</li>
+                </ul>
+            </div>
+            
+            <div class="card-dark mt-3">
+                <h6><i class="fas fa-shield-alt gold"></i> Security</h6>
+                <ul class="text-muted-custom small mb-0">
+                    <li>Passwords are hashed before storage</li>
+                    <li>All data is encrypted</li>
+                    <li>User activity is logged</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}M-Pesa Payment Status - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card-dark">
+                <div id="statusDisplay">
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--gold);"></i>
+                        <h4 class="mt-3">Processing Payment...</h4>
+                        <p class="text-muted-custom">Please check your phone and enter your M-Pesa PIN.</p>
+                        <p class="text-muted-custom small">Amount: <strong class="gold">KSH {{ "%.2f"|format(amount) }}</strong></p>
+                        <div class="mt-3">
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%; background-color: var(--gold);"></div>
+                            </div>
+                        </div>
+                        <p class="text-muted-custom small mt-3" id="timerText">Waiting for confirmation...</p>
+                        <div class="mt-3">
+                            <a href="{{ url_for('wallet.wallet') }}" class="btn-outline-gold btn-sm">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="resultDisplay" style="display:none;">
+                    <div class="text-center py-4">
+                        <i id="resultIcon" class="fas fa-check-circle" style="font-size: 4rem; color: #28a745;"></i>
+                        <h4 id="resultTitle" class="mt-3">Payment Successful!</h4>
+                        <p id="resultMessage" class="text-muted-custom">Your deposit has been completed successfully.</p>
+                        <div id="resultDetails" class="mt-3">
+                            <p><strong>Amount:</strong> <span id="resultAmount" class="gold">KSH {{ "%.2f"|format(amount) }}</span></p>
+                            <p><strong>Receipt:</strong> <span id="resultReceipt"></span></p>
+                        </div>
+                        <div class="mt-4">
+                            <a href="{{ url_for('wallet.wallet') }}" class="btn-gold">
+                                <i class="fas fa-wallet"></i> Go to Wallet
+                            </a>
+                            <a href="{{ url_for('wallet.transactions') }}" class="btn-outline-gold ms-2">
+                                <i class="fas fa-history"></i> View Transactions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkoutRequestId = "{{ checkout_request_id }}";
+    const transactionId = "{{ transaction_id }}";
+    let attempts = 0;
+    const maxAttempts = 60;
+    let seconds = 0;
+    
+    function updateTimer() {
+        seconds++;
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        document.getElementById('timerText').textContent = 
+            `Waiting for confirmation... ${minutes}m ${remainingSeconds}s elapsed`;
+    }
+    
+    const timerInterval = setInterval(updateTimer, 1000);
+    
+    function checkStatus() {
+        attempts++;
+        
+        fetch('/payments/mpesa/query/' + checkoutRequestId)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Status check:', data);
+                
+                if (data.success) {
+                    if (data.status === 'completed') {
+                        clearInterval(timerInterval);
+                        document.getElementById('statusDisplay').style.display = 'none';
+                        document.getElementById('resultDisplay').style.display = 'block';
+                        document.getElementById('resultIcon').className = 'fas fa-check-circle';
+                        document.getElementById('resultIcon').style.color = '#28a745';
+                        document.getElementById('resultTitle').textContent = '✅ Payment Successful!';
+                        document.getElementById('resultMessage').textContent = 'Your deposit has been completed successfully.';
+                        document.getElementById('resultReceipt').textContent = data.mpesa_receipt || 'N/A';
+                    } else if (data.status === 'pending') {
+                        if (attempts < maxAttempts) {
+                            setTimeout(checkStatus, 3000);
+                        } else {
+                            clearInterval(timerInterval);
+                            document.getElementById('statusDisplay').innerHTML = `
+                                <div class="text-center py-4">
+                                    <i class="fas fa-clock" style="font-size: 4rem; color: #ffc107;"></i>
+                                    <h4 class="mt-3">Taking Longer Than Expected</h4>
+                                    <p class="text-muted-custom">Please check your phone and enter your PIN if prompted.</p>
+                                    <p class="text-muted-custom small">You can check the status in your transaction history.</p>
+                                    <div class="mt-3">
+                                        <a href="{{ url_for('wallet.transactions') }}" class="btn-gold">
+                                            <i class="fas fa-history"></i> View Transactions
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } else if (data.status === 'failed' || data.status === 'cancelled') {
+                        clearInterval(timerInterval);
+                        document.getElementById('statusDisplay').style.display = 'none';
+                        document.getElementById('resultDisplay').style.display = 'block';
+                        document.getElementById('resultIcon').className = 'fas fa-times-circle';
+                        document.getElementById('resultIcon').style.color = '#dc3545';
+                        document.getElementById('resultTitle').textContent = '❌ Payment Failed';
+                        document.getElementById('resultMessage').textContent = data.message || 'Your payment could not be processed.';
+                    }
+                } else {
+                    if (attempts < maxAttempts) {
+                        setTimeout(checkStatus, 5000);
+                    } else {
+                        clearInterval(timerInterval);
+                        document.getElementById('statusDisplay').innerHTML = `
+                            <div class="text-center py-4">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #dc3545;"></i>
+                                <h4 class="mt-3">Error Checking Status</h4>
+                                <p class="text-muted-custom">We're having trouble checking your payment status.</p>
+                                <div class="mt-3">
+                                    <a href="{{ url_for('wallet.transactions') }}" class="btn-gold">
+                                        <i class="fas fa-history"></i> View Transactions
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+                if (attempts < maxAttempts) {
+                    setTimeout(checkStatus, 5000);
+                } else {
+                    clearInterval(timerInterval);
+                    document.getElementById('statusDisplay').innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #dc3545;"></i>
+                            <h4 class="mt-3">Connection Error</h4>
+                            <p class="text-muted-custom">Please check your internet connection.</p>
+                            <div class="mt-3">
+                                <a href="{{ url_for('wallet.transactions') }}" class="btn-gold">
+                                    <i class="fas fa-history"></i> View Transactions
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+    }
+    
+    // Start checking after 3 seconds
+    setTimeout(checkStatus, 3000);
+});
+</script>
+{% endblock %}

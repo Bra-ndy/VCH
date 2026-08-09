@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Referrals - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-user-plus gold"></i> Referrals Overview</h2>
+    
+    <div class="card-dark">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Referrer</th>
+                        <th>Referred</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Paid</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bonus in referrals %}
+                    <tr>
+                        <td>{{ bonus.referrer.username }}</td>
+                        <td>{{ bonus.referred.username }}</td>
+                        <td class="text-success">KSH {{ "%.2f"|format(bonus.amount) }}</td>
+                        <td>{{ bonus.type|replace('_', ' ')|title }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if bonus.is_paid else 'danger' }}">
+                                {{ 'Paid' if bonus.is_paid else 'Pending' }}
+                            </span>
+                        </td>
+                        <td>{{ bonus.created_at.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

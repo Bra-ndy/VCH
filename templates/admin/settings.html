@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-cog gold"></i> System Settings</h2>
+    <p class="text-muted-custom">Configure your platform settings</p>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card-dark">
+                <h5>General Settings</h5>
+                <form method="POST" action="{{ url_for('admin.settings') }}">
+                    {{ form.hidden_tag() if form else '' }}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Site Name</label>
+                        <input type="text" name="site_name" class="form-control" value="{{ app_name or 'VCH' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Site URL</label>
+                        <input type="url" name="site_url" class="form-control" value="{{ app_url or 'http://localhost:5000' }}">
+                    </div>
+                    
+                    <hr class="border-gold">
+                    
+                    <h6>Referral Settings</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Referral Bonus (%)</label>
+                        <input type="number" name="referral_bonus" class="form-control" value="10" step="0.5" min="0" max="100">
+                        <small class="text-muted-custom">Percentage bonus for referring new users</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Referral Commission (%)</label>
+                        <input type="number" name="referral_commission" class="form-control" value="2" step="0.5" min="0" max="100">
+                        <small class="text-muted-custom">Daily commission on referred users' earnings</small>
+                    </div>
+                    
+                    <hr class="border-gold">
+                    
+                    <h6>Withdrawal Settings</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Minimum Withdrawal (KSH)</label>
+                        <input type="number" name="min_withdrawal" class="form-control" value="100" step="1" min="0">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Maximum Withdrawal (KSH)</label>
+                        <input type="number" name="max_withdrawal" class="form-control" value="50000" step="1" min="0">
+                    </div>
+                    
+                    <hr class="border-gold">
+                    
+                    <h6>Servicing Settings</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Daily Service Earning (KSH)</label>
+                        <input type="number" name="service_earning" class="form-control" value="50" step="1" min="0">
+                    </div>
+                    
+                    <button type="submit" class="btn-gold w-100">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card-dark">
+                <h5>System Info</h5>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item bg-transparent text-white border-secondary">
+                        <span class="text-muted-custom">Platform</span>
+                        <div class="fw-bold">{{ app_name or 'VCH' }}</div>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary">
+                        <span class="text-muted-custom">Version</span>
+                        <div class="fw-bold">1.0.0</div>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary">
+                        <span class="text-muted-custom">Environment</span>
+                        <div class="fw-bold">{{ 'Production' if app.config.get('ENV') == 'production' else 'Development' }}</div>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary">
+                        <span class="text-muted-custom">Database</span>
+                        <div class="fw-bold">{{ app.config.get('SQLALCHEMY_DATABASE_URI', 'SQLite') }}</div>
+                    </div>
+                </div>
+                
+                <hr class="border-gold">
+                
+                <h6>Quick Actions</h6>
+                <div class="d-grid gap-2">
+                    <button class="btn-gold" onclick="backupDatabase()">
+                        <i class="fas fa-database"></i> Backup Database
+                    </button>
+                    <button class="btn-outline-gold" onclick="clearCache()">
+                        <i class="fas fa-sync"></i> Clear Cache
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function backupDatabase() {
+    if(confirm('Are you sure you want to backup the database?')) {
+        alert('Database backup initiated. You will be notified when complete.');
+    }
+}
+
+function clearCache() {
+    if(confirm('Are you sure you want to clear all cache?')) {
+        alert('Cache cleared successfully!');
+    }
+}
+</script>
+{% endblock %}

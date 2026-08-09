@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Active Rentals - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-car gold"></i> Active Rentals</h2>
+        <a href="{{ url_for('rentals.cars') }}" class="btn-gold">
+            <i class="fas fa-plus"></i> Rent More Cars
+        </a>
+    </div>
+    
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">{{ rentals|length }}</div>
+                <div class="label">Active Rentals</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(total_earnings|default(0)) }}</div>
+                <div class="label">Total Earned</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(daily_earnings|default(0)) }}</div>
+                <div class="label">Daily Earnings</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-dark">
+        {% if rentals %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Daily Earning</th>
+                            <th>Days Remaining</th>
+                            <th>Days Elapsed</th>
+                            <th>Total Earned</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rental in rentals %}
+                        <tr>
+                            <td>
+                                <strong>{{ rental.vehicle.name }}</strong>
+                                <br>
+                                <small class="text-muted-custom">{{ rental.vehicle.brand }}</small>
+                            </td>
+                            <td class="gold">KSH {{ "%.2f"|format(rental.daily_earning) }}</td>
+                            <td>
+                                <span class="fw-bold">{{ rental.days_remaining() }}</span>
+                                <br>
+                                <small class="text-muted-custom">days</small>
+                            </td>
+                            <td>{{ rental.days_elapsed }} / 30</td>
+                            <td class="text-success">KSH {{ "%.2f"|format(rental.total_earned) }}</td>
+                            <td>
+                                <span class="badge bg-success">Active</span>
+                                <br>
+                                <small class="text-muted-custom">
+                                    {% if rental.days_remaining() <= 3 %}
+                                    <span class="text-warning">⚠️ Expiring soon</span>
+                                    {% endif %}
+                                </small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Rental Summary -->
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <div class="card-dark">
+                        <h6>Rental Summary</h6>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-custom">Total Investment:</span>
+                            <span>KSH {{ "%.2f"|format(total_investment|default(0)) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-custom">Total Earned:</span>
+                            <span class="text-success">KSH {{ "%.2f"|format(total_earnings|default(0)) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted-custom">Net Profit:</span>
+                            <span class="gold">KSH {{ "%.2f"|format(total_profit|default(0)) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card-dark">
+                        <h6>Daily Earnings</h6>
+                        <div class="text-center">
+                            <div class="display-6 gold">KSH {{ "%.2f"|format(daily_earnings|default(0)) }}</div>
+                            <div class="text-muted-custom small">per day from all rentals</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-car" style="font-size: 4rem; color: #2a2a2a;"></i>
+                <h4 class="mt-3">No Active Rentals</h4>
+                <p class="text-muted-custom">You don't have any active rentals right now.</p>
+                <a href="{{ url_for('rentals.cars') }}" class="btn-gold mt-2">
+                    <i class="fas fa-car"></i> Browse Cars
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Register - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card-dark">
+                <div class="text-center mb-4">
+                    <i class="fas fa-car" style="font-size: 3rem; color: var(--gold);"></i>
+                    <h2 class="mt-2">{{ app_name or 'VCH' }}</h2>
+                    <h4>Create Account</h4>
+                    <p class="text-muted-custom small">
+                        🎉 New members receive 10,000 points and a FREE Duck that earns KSH 5/day!
+                    </p>
+                </div>
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Form Errors -->
+                {% if form and form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Please fix the following errors:</strong>
+                        <ul class="mb-0">
+                            {% for field, errors in form.errors.items() %}
+                                {% for error in errors %}
+                                    <li>{{ field|replace('_', ' ')|title }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+                
+                <form method="POST" action="{{ url_for('auth.register') }}">
+                    {{ form.hidden_tag() if form else '' }}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control {% if form and form.username.errors %}is-invalid{% endif %}" 
+                               placeholder="Your name" value="{{ form.username.data or '' }}" required>
+                        {% if form and form.username.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control {% if form and form.email.errors %}is-invalid{% endif %}" 
+                               placeholder="you@example.com" value="{{ form.email.data or '' }}" required>
+                        {% if form and form.email.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control {% if form and form.phone.errors %}is-invalid{% endif %}" 
+                               placeholder="0703338493" value="{{ form.phone.data or '' }}" required>
+                        <small class="text-muted-custom">Enter your phone number (e.g., 0703338493 or 254703338493)</small>
+                        {% if form and form.phone.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.phone.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control {% if form and form.password.errors %}is-invalid{% endif %}" 
+                               placeholder="Min 8 characters" required>
+                        <small class="text-muted-custom">Must contain at least 8 characters, one letter and one number</small>
+                        {% if form and form.password.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" name="password_confirm" class="form-control {% if form and form.password_confirm.errors %}is-invalid{% endif %}" 
+                               placeholder="Confirm your password" required>
+                        {% if form and form.password_confirm.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.password_confirm.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Referral Code (Optional)</label>
+                        <input type="text" name="referral_code" class="form-control {% if form and form.referral_code.errors %}is-invalid{% endif %}" 
+                               placeholder="Enter referral code from inviter" value="{{ form.referral_code.data or '' }}">
+                        <small class="text-muted-custom">If you were invited by someone, enter their referral code</small>
+                        {% if form and form.referral_code.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.referral_code.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="agree_terms" class="form-check-input {% if form and form.agree_terms.errors %}is-invalid{% endif %}" 
+                               id="agree_terms" {% if form and form.agree_terms.data %}checked{% endif %} required>
+                        <label class="form-check-label" for="agree_terms">
+                            I agree to the <a href="#" class="gold">Terms and Conditions</a>
+                        </label>
+                        {% if form and form.agree_terms.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.agree_terms.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn-gold w-100">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                </form>
+                
+                <hr class="border-gold my-4">
+                
+                <div class="text-center">
+                    <p class="mb-0">
+                        Already have an account? <a href="{{ url_for('auth.login') }}" class="gold">Login here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

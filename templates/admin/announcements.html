@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Announcements - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-bullhorn gold"></i> Announcements</h2>
+    <p class="text-muted-custom">Send announcements to users</p>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card-dark mb-4">
+                <h5><i class="fas fa-pen gold"></i> Send Announcement</h5>
+                <form method="POST" action="{{ url_for('admin.announcements') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" placeholder="Announcement title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea name="message" class="form-control" rows="4" placeholder="Enter announcement message" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Target Audience</label>
+                        <select name="user_type" class="form-control">
+                            <option value="all">All Users</option>
+                            <option value="active">Active Users Only</option>
+                            <option value="inactive">Inactive Users Only</option>
+                            <option value="agents">Agents Only</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="send_email" class="form-check-input" id="send_email">
+                        <label class="form-check-label" for="send_email">Send email notification</label>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="send_sms" class="form-check-input" id="send_sms">
+                        <label class="form-check-label" for="send_sms">Send SMS notification</label>
+                    </div>
+                    
+                    <button type="submit" class="btn-gold w-100">
+                        <i class="fas fa-paper-plane"></i> Send Announcement
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card-dark">
+                <h5><i class="fas fa-list gold"></i> Recent Announcements</h5>
+                <div class="list-group list-group-flush">
+                    {% if announcements %}
+                        {% for announcement in announcements %}
+                        <div class="list-group-item bg-transparent text-white border-secondary">
+                            <h6 class="mb-1">{{ announcement.title }}</h6>
+                            <p class="text-muted-custom small mb-1">{{ announcement.message[:80] }}{% if announcement.message|length > 80 %}...{% endif %}</p>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted-custom">{{ announcement.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                                <span class="badge bg-{{ 'success' if announcement.is_sent else 'warning' }}">
+                                    {{ 'Sent' if announcement.is_sent else 'Pending' }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted-custom text-center">No announcements yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

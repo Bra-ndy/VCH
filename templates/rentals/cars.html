@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Available Cars - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-car gold"></i> Available Cars</h2>
+            <p class="text-muted-custom">Rent a car and earn daily income</p>
+        </div>
+        <div>
+            <span class="badge bg-gold">Your Balance: KSH {{ "%.2f"|format(current_user.balance or 0) }}</span>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        {% for vehicle in vehicles %}
+        <div class="col-md-3">
+            <div class="card-dark text-center h-100">
+                <div class="car-image mb-3">
+                    {% if vehicle.image %}
+                    <img src="{{ vehicle.image }}" alt="{{ vehicle.name }}" class="img-fluid rounded" style="height: 120px; object-fit: cover; width: 100%;">
+                    {% else %}
+                    <i class="fas fa-car" style="font-size: 3.5rem; color: var(--gold);"></i>
+                    {% endif %}
+                </div>
+                
+                <h5 class="mb-1">{{ vehicle.name }}</h5>
+                <p class="text-muted-custom small">{{ vehicle.brand }}</p>
+                
+                <div class="car-details mb-3">
+                    <div class="row g-1">
+                        <div class="col-6">
+                            <div class="text-muted-custom small">Daily Earning</div>
+                            <div class="gold fw-bold">KSH {{ "%.2f"|format(vehicle.daily_earning) }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted-custom small">Rental Price</div>
+                            <div class="fw-bold">KSH {{ "%.2f"|format(vehicle.rental_price) }}</div>
+                        </div>
+                        <div class="col-12 mt-1">
+                            <div class="text-muted-custom small">Total Profit (30 days)</div>
+                            <div class="text-success fw-bold">KSH {{ "%.2f"|format(vehicle.total_profit) }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid">
+                    <a href="{{ url_for('rentals.rent', vehicle_id=vehicle.id) }}" class="btn-gold">
+                        <i class="fas fa-rental"></i> Rent Now
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

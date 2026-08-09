@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}View User - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}" class="text-gold">Admin</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.users') }}" class="text-gold">Users</a></li>
+            <li class="breadcrumb-item active text-white">{{ user.username }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <!-- User Info -->
+        <div class="col-md-4">
+            <div class="card-dark">
+                <div class="text-center">
+                    <i class="fas fa-user-circle" style="font-size: 4rem; color: var(--gold);"></i>
+                    <h4 class="mt-2">{{ user.username }}</h4>
+                    <p class="text-muted-custom">{{ user.email }}</p>
+                </div>
+                
+                <hr class="border-gold">
+                
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="text-muted-custom small">User ID</div>
+                        <div class="fw-bold">{{ user.user_id }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Phone</div>
+                        <div class="fw-bold">{{ user.phone or 'N/A' }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Agent Level</div>
+                        <div class="fw-bold">{{ user.agent_level|replace('_', ' ')|title or 'None' }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Joined</div>
+                        <div class="fw-bold">{{ user.created_at.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Status</div>
+                        <div>
+                            <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                                {{ 'Active' if user.is_active else 'Blocked' }}
+                            </span>
+                            <span class="badge bg-{{ 'success' if user.is_verified else 'warning' }}">
+                                {{ 'Verified' if user.is_verified else 'Unverified' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Referral Code</div>
+                        <div class="fw-bold gold">{{ user.referral_code }}</div>
+                    </div>
+                </div>
+                
+                <hr class="border-gold">
+                
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Balance</div>
+                        <div class="h5 gold">KSH {{ "%.2f"|format(user.balance or 0) }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted-custom small">Referrals</div>
+                        <div class="h5">{{ user.referral_count }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card-dark mt-3">
+                <h6><i class="fas fa-bolt gold"></i> Quick Actions</h6>
+                <div class="d-grid gap-2">
+                    {% if user.is_active %}
+                    <form method="POST" action="{{ url_for('admin.block_user', user_id=user.id) }}">
+                        <button type="submit" class="btn-outline-gold w-100" onclick="return confirm('Block this user?')">
+                            <i class="fas fa-ban"></i> Block User
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('admin.unblock_user', user_id=user.id) }}">
+                        <button type="submit" class="btn-gold w-100">
+                            <i class="fas fa-check"></i> Unblock User
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if not user.is_verified %}
+                    <form method="POST" action="{{ url_for('admin.verify_user', user_id=user.id) }}">
+                        <button type="submit" class="btn-gold w-100">
+                            <i class="fas fa-check-circle"></i> Verify User
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn-outline-gold text-center">
+                        <i class="fas fa-edit"></i> Edit User
+                    </a>
+                    
+                    <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" onsubmit="return confirm('Permanently delete this user? This cannot be undone!')">
+                        <button type="submit" class="btn-outline-danger w-100" style="background: transparent; border: 2px solid #dc3545; color: #dc3545; padding: 0.5rem; border-radius: 50px;">
+                            <i class="fas fa-trash"></i> Delete User
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Financial Actions -->
+        <div class="col-md-8">
+            <div class="card-dark mb-3">
+                <h5><i class="fas fa-money-bill-wave gold"></i> Financial Actions</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <form method="POST" action="{{ url_for('admin.add_money', user_id=user.id) }}">
+                            <div class="mb-2">
+                                <label class="form-label">Add Money</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-dark text-white border-secondary">KSH</span>
+                                    <input type="number" name="amount" class="form-control" placeholder="Amount" step="1" min="1" required>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" name="description" class="form-control" placeholder="Reason (optional)">
+                            </div>
+                            <button type="submit" class="btn-gold w-100">
+                                <i class="fas fa-plus"></i> Add Money
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="POST" action="{{ url_for('admin.deduct_money', user_id=user.id) }}">
+                            <div class="mb-2">
+                                <label class="form-label">Deduct Money</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-dark text-white border-secondary">KSH</span>
+                                    <input type="number" name="amount" class="form-control" placeholder="Amount" step="1" min="1" required>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" name="description" class="form-control" placeholder="Reason (optional)">
+                            </div>
+                            <button type="submit" class="btn-outline-gold w-100">
+                                <i class="fas fa-minus"></i> Deduct Money
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="text-muted-custom small mt-2">
+                    Current Balance: <span class="gold">KSH {{ "%.2f"|format(user.balance or 0) }}</span>
+                </div>
+            </div>
+            
+            <!-- Recent Transactions -->
+            <div class="card-dark mb-3">
+                <h5><i class="fas fa-history gold"></i> Recent Transactions</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for txn in transactions %}
+                            <tr>
+                                <td>{{ txn.type|replace('_', ' ')|title }}</td>
+                                <td class="{% if txn.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ '+' if txn.amount > 0 else '' }}KSH {{ "%.2f"|format(txn.amount) }}
+                                </td>
+                                <td><span class="badge bg-{{ 'success' if txn.status == 'completed' else 'warning' if txn.status == 'pending' else 'danger' }}">{{ txn.status|title }}</span></td>
+                                <td>{{ txn.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Recent Rentals -->
+            <div class="card-dark">
+                <h5><i class="fas fa-car gold"></i> Recent Rentals</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Vehicle</th>
+                                <th>Amount</th>
+                                <th>Daily Earning</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rental in rentals %}
+                            <tr>
+                                <td>{{ rental.vehicle.name }}</td>
+                                <td>KSH {{ "%.2f"|format(rental.amount) }}</td>
+                                <td class="gold">KSH {{ "%.2f"|format(rental.daily_earning) }}</td>
+                                <td><span class="badge bg-{{ 'success' if rental.status == 'active' else 'info' if rental.status == 'completed' else 'danger' }}">{{ rental.status|title }}</span></td>
+                                <td>{{ rental.created_at.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Withdrawals - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-money-bill-wave gold"></i> Manage Withdrawals</h2>
+    
+    <div class="card-dark">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>User</th>
+                        <th>Amount</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for withdrawal in withdrawals.items %}
+                    <tr>
+                        <td>{{ withdrawal.transaction_id[:8] }}</td>
+                        <td>{{ withdrawal.user.username }}</td>
+                        <td>KSH {{ "%.2f"|format(withdrawal.amount) }}</td>
+                        <td>{{ withdrawal.payment_reference }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if withdrawal.status == 'completed' else 'warning' if withdrawal.status == 'pending' else 'danger' }}">
+                                {{ withdrawal.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ withdrawal.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            {% if withdrawal.status == 'pending' %}
+                            <form method="POST" action="{{ url_for('admin.process_withdrawal', transaction_id=withdrawal.id) }}" style="display:inline;">
+                                <button type="submit" name="action" value="approve" class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
+                                <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted">Processed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if withdrawals.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if withdrawals.has_prev %}
+                <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="{{ url_for('admin.withdrawals', page=withdrawals.prev_num) }}">Previous</a></li>
+                {% endif %}
+                
+                {% for page in withdrawals.iter_pages() %}
+                    {% if page %}
+                        <li class="page-item {% if page == withdrawals.page %}active{% endif %}">
+                            <a class="page-link bg-dark text-white border-secondary {% if page == withdrawals.page %}gold-bg{% endif %}" href="{{ url_for('admin.withdrawals', page=page) }}">{{ page }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link bg-dark text-white border-secondary">…</span></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if withdrawals.has_next %}
+                <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="{{ url_for('admin.withdrawals', page=withdrawals.next_num) }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

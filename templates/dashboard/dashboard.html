@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Welcome back, <span class="gold">{{ current_user.username }}</span>!</h2>
+            <p class="text-muted-custom">
+                <i class="fas fa-id-card"></i> ID: {{ current_user.user_id }}
+                <span class="ms-3"><i class="fas fa-phone"></i> {{ current_user.phone or 'Not set' }}</span>
+                <span class="ms-3"><i class="fas fa-code"></i> Referral: {{ current_user.referral_code }}</span>
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="card-dark d-inline-block">
+                <div class="text-muted-custom small">Balance</div>
+                <div class="h3 mb-0 gold">KSH {{ "%.2f"|format(current_user.balance or 0) }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="number">{{ today_earnings_total|default(0)|round(2) }}</div>
+                <div class="label">Today's Income</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="number">{{ current_user.total_earned|default(0)|round(2) }}</div>
+                <div class="label">Total Earned</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="number">{{ referral_count|default(0) }}</div>
+                <div class="label">Referrals</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="number">{{ active_rentals|length }}</div>
+                <div class="label">Active Rentals</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-4 col-md-2">
+            <a href="{{ url_for('rentals.cars') }}" class="quick-action">
+                <i class="fas fa-car"></i>
+                <span>Shop</span>
+            </a>
+        </div>
+        <div class="col-4 col-md-2">
+            <a href="{{ url_for('servicing.servicing') }}" class="quick-action">
+                <i class="fas fa-wrench"></i>
+                <span>Service</span>
+            </a>
+        </div>
+        <div class="col-4 col-md-2">
+            <a href="{{ url_for('referrals.referrals') }}" class="quick-action">
+                <i class="fas fa-user-plus"></i>
+                <span>Invite</span>
+            </a>
+        </div>
+        <div class="col-4 col-md-2">
+            <a href="{{ url_for('wallet.wallet') }}" class="quick-action">
+                <i class="fas fa-wallet"></i>
+                <span>Wallet</span>
+            </a>
+        </div>
+        <div class="col-4 col-md-2">
+            <a href="{{ url_for('wallet.deposit') }}" class="quick-action">
+                <i class="fas fa-plus-circle"></i>
+                <span>Recharge</span>
+            </a>
+        </div>
+        <div class="col-4 col-md-2">
+            <a href="{{ url_for('wallet.withdraw') }}" class="quick-action">
+                <i class="fas fa-arrow-up-right"></i>
+                <span>Withdraw</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Active Rentals -->
+    <div class="card-dark mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-car gold"></i> Active Rentals</h5>
+            <a href="{{ url_for('rentals.active_rentals') }}" class="text-gold">View All →</a>
+        </div>
+        {% if active_rentals %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Daily Earning</th>
+                            <th>Days Remaining</th>
+                            <th>Total Earned</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rental in active_rentals %}
+                        <tr>
+                            <td>{{ rental.vehicle.name }}</td>
+                            <td>KSH {{ "%.2f"|format(rental.daily_earning) }}</td>
+                            <td>{{ rental.days_remaining() }}</td>
+                            <td>KSH {{ "%.2f"|format(rental.total_earned) }}</td>
+                            <td><span class="badge bg-success">Active</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-center text-muted-custom mb-0">
+                No active rentals. <a href="{{ url_for('rentals.cars') }}" class="gold">Rent a car now!</a>
+            </p>
+        {% endif %}
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="card-dark">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-history gold"></i> Recent Transactions</h5>
+            <a href="{{ url_for('wallet.transactions') }}" class="text-gold">View All →</a>
+        </div>
+        {% if recent_transactions %}
+            <div class="list-group list-group-flush">
+                {% for txn in recent_transactions %}
+                <div class="list-group-item bg-transparent text-white border-secondary">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-{{ 'success' if txn.type == 'deposit' else 'warning' if txn.type == 'withdrawal' else 'info' }}">
+                                {{ txn.type|replace('_', ' ')|title }}
+                            </span>
+                            <span class="text-muted-custom small ms-2">{{ txn.description or '' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-{{ 'success' if txn.amount > 0 else 'danger' }}">
+                                {{ '+' if txn.amount > 0 else '' }}KSH {{ "%.2f"|format(txn.amount) }}
+                            </span>
+                            <span class="text-muted-custom small ms-2">{{ txn.created_at.strftime('%H:%M') }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center text-muted-custom mb-0">No transactions yet</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

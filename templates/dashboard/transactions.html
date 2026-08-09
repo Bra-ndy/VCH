@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-history gold"></i> Transaction History</h2>
+    
+    <!-- Filter -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card-dark">
+                <form method="GET" action="{{ url_for('dashboard.transactions') }}" class="row g-3">
+                    <div class="col-md-4">
+                        <select name="type" class="form-control">
+                            <option value="">All Types</option>
+                            <option value="deposit">Deposit</option>
+                            <option value="withdrawal">Withdrawal</option>
+                            <option value="rental_earning">Rental Earning</option>
+                            <option value="service_earning">Service Earning</option>
+                            <option value="referral_bonus">Referral Bonus</option>
+                            <option value="agent_salary">Agent Salary</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="status" class="form-control">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn-gold w-100">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-dark">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Fee</th>
+                        <th>Net</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions.items %}
+                    <tr>
+                        <td><small>{{ txn.transaction_id[:12] }}</small></td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if txn.type == 'deposit' else 'warning' if txn.type == 'withdrawal' else 'info' }}">
+                                {{ txn.type|replace('_', ' ')|title }}
+                            </span>
+                        </td>
+                        <td class="{% if txn.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ '+' if txn.amount > 0 else '' }}KSH {{ "%.2f"|format(txn.amount) }}
+                        </td>
+                        <td>KSH {{ "%.2f"|format(txn.fee or 0) }}</td>
+                        <td class="{% if txn.net_amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ '+' if txn.net_amount > 0 else '' }}KSH {{ "%.2f"|format(txn.net_amount) }}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if txn.status == 'completed' else 'warning' if txn.status == 'pending' else 'danger' }}">
+                                {{ txn.status|title }}
+                            </span>
+                        </td>
+                        <td><small>{{ txn.created_at.strftime('%d/%m/%Y %H:%M') }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if transactions.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if transactions.has_prev %}
+                <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="{{ url_for('dashboard.transactions', page=transactions.prev_num) }}">Previous</a></li>
+                {% endif %}
+                
+                {% for page in transactions.iter_pages() %}
+                    {% if page %}
+                        <li class="page-item {% if page == transactions.page %}active{% endif %}">
+                            <a class="page-link bg-dark text-white border-secondary {% if page == transactions.page %}gold-bg{% endif %}" href="{{ url_for('dashboard.transactions', page=page) }}">{{ page }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link bg-dark text-white border-secondary">…</span></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if transactions.has_next %}
+                <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="{{ url_for('dashboard.transactions', page=transactions.next_num) }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name or 'VCH' }}{% endblock %}</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-dark: #b8960f;
+            --gold-light: #e8c84a;
+            --primary-black: #0b0b0b;
+            --secondary-black: #141414;
+            --dark-gray: #1a1a1a;
+            --medium-gray: #2a2a2a;
+            --text-muted: #9a9a9a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--primary-black);
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .gold { color: var(--gold); }
+        .gold-bg { background-color: var(--gold); color: var(--primary-black); }
+        .border-gold { border-color: var(--gold) !important; }
+        .text-muted-custom { color: var(--text-muted); }
+        
+        .btn-gold {
+            background-color: var(--gold);
+            color: var(--primary-black);
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-gold:hover {
+            background-color: var(--gold-dark);
+            color: var(--primary-black);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            text-decoration: none;
+        }
+        
+        .btn-outline-gold {
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-outline-gold:hover {
+            background: var(--gold);
+            color: var(--primary-black);
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+        
+        .card-dark {
+            background: var(--secondary-black);
+            border: 1px solid var(--medium-gray);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .card-dark:hover {
+            border-color: var(--gold);
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.1);
+        }
+        
+        .navbar-custom {
+            background: var(--secondary-black) !important;
+            border-bottom: 1px solid var(--medium-gray);
+            padding: 0.8rem 0;
+        }
+        .navbar-custom .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--gold);
+        }
+        .navbar-custom .navbar-brand i {
+            color: var(--gold);
+        }
+        .navbar-custom .navbar-brand:hover {
+            color: var(--gold-light);
+        }
+        .navbar-custom .nav-link {
+            color: var(--text-muted) !important;
+            transition: color 0.3s ease;
+        }
+        .navbar-custom .nav-link:hover {
+            color: var(--gold) !important;
+        }
+        .navbar-custom .nav-link.active {
+            color: var(--gold) !important;
+        }
+        
+        .alert {
+            border-radius: 0.75rem;
+            border: none;
+        }
+        .alert-success {
+            background-color: rgba(212, 175, 55, 0.15);
+            color: var(--gold);
+            border-left: 4px solid var(--gold);
+        }
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.15);
+            color: #dc3545;
+            border-left: 4px solid #dc3545;
+        }
+        .alert-info {
+            background-color: rgba(13, 202, 240, 0.15);
+            color: #0dcaf0;
+            border-left: 4px solid #0dcaf0;
+        }
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .form-control {
+            background-color: var(--dark-gray);
+            color: #ffffff;
+            border: 1px solid var(--medium-gray);
+            border-radius: 0.5rem;
+            padding: 0.8rem;
+        }
+        .form-control:focus {
+            background-color: var(--dark-gray);
+            color: #ffffff;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+        }
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+        .form-control:disabled {
+            opacity: 0.5;
+        }
+        
+        .form-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        
+        .stat-card {
+            background: var(--dark-gray);
+            border: 1px solid var(--medium-gray);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-4px);
+        }
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        .stat-card .label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+        
+        .quick-action {
+            background: var(--dark-gray);
+            border: 1px solid var(--medium-gray);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            color: #ffffff;
+            text-decoration: none;
+            display: block;
+        }
+        .quick-action:hover {
+            border-color: var(--gold);
+            transform: translateY(-4px);
+            color: #ffffff;
+            text-decoration: none;
+        }
+        .quick-action i {
+            font-size: 2rem;
+            color: var(--gold);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        footer {
+            border-top: 1px solid var(--medium-gray);
+            padding: 2rem 0;
+            margin-top: 3rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            padding: 0;
+            margin: 0;
+        }
+        .breadcrumb-item a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+        .breadcrumb-item a:hover {
+            color: var(--gold-light);
+        }
+        .breadcrumb-item.active {
+            color: var(--text-muted);
+        }
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: var(--text-muted);
+        }
+        
+        /* Pagination */
+        .page-link {
+            background-color: var(--dark-gray);
+            border-color: var(--medium-gray);
+            color: #ffffff;
+        }
+        .page-link:hover {
+            background-color: var(--medium-gray);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        .page-item.active .page-link {
+            background-color: var(--gold);
+            border-color: var(--gold);
+            color: var(--primary-black);
+        }
+        .page-item.disabled .page-link {
+            background-color: var(--dark-gray);
+            border-color: var(--medium-gray);
+            color: var(--text-muted);
+        }
+        
+        /* Dropdown menu styles */
+        .dropdown-menu {
+            background-color: var(--secondary-black);
+            border: 1px solid var(--medium-gray);
+        }
+        .dropdown-menu .dropdown-item {
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        .dropdown-menu .dropdown-item:hover {
+            background-color: var(--dark-gray);
+            color: var(--gold);
+        }
+        .dropdown-menu .dropdown-item i {
+            color: var(--gold);
+            width: 20px;
+        }
+        .dropdown-divider {
+            border-color: var(--medium-gray);
+        }
+        
+        @media (max-width: 768px) {
+            .stat-card .number { font-size: 1.5rem; }
+            .container { padding-left: 1rem; padding-right: 1rem; }
+            .quick-action { padding: 1rem; }
+            .quick-action i { font-size: 1.5rem; }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') if not current_user.is_authenticated else url_for('dashboard') }}">
+                <i class="fas fa-car"></i> {{ app_name or 'VCH' }}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('dashboard') }}">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('wallet.wallet') }}">
+                                <i class="fas fa-wallet"></i> Wallet
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('rentals.cars') }}">
+                                <i class="fas fa-car"></i> Cars
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> {{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('wallet.wallet') }}"><i class="fas fa-wallet"></i> Wallet</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('dashboard') }}"><i class="fas fa-user"></i> Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('referrals.referrals') }}"><i class="fas fa-users"></i> Referrals</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('faq') }}">FAQ</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('contact') }}">Contact</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
+                        <li class="nav-item"><a class="nav-link btn-gold ms-2" href="{{ url_for('auth.register') }}" style="color: #0b0b0b;">Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; {{ current_year or '2024' }} {{ app_name or 'VCH' }}. All rights reserved.</p>
+            <small>Virtual Car Hire Investment Platform</small>
+            <div class="mt-2">
+                <a href="{{ url_for('about') }}" class="text-muted-custom me-3">About</a>
+                <a href="{{ url_for('faq') }}" class="text-muted-custom me-3">FAQ</a>
+                <a href="{{ url_for('contact') }}" class="text-muted-custom">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

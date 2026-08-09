@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Rentals - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2><i class="fas fa-calendar-check gold"></i> Manage Rentals</h2>
+    <p class="text-muted-custom">View and manage all rental transactions</p>
+    
+    <div class="card-dark">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Rental ID</th>
+                        <th>User</th>
+                        <th>Vehicle</th>
+                        <th>Amount</th>
+                        <th>Daily Earning</th>
+                        <th>Status</th>
+                        <th>Days Left</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rental in rentals.items %}
+                    <tr>
+                        <td><small>{{ rental.rental_id[:8] }}</small></td>
+                        <td>{{ rental.user.username }}</td>
+                        <td>{{ rental.vehicle.name }}</td>
+                        <td>KSH {{ "%.2f"|format(rental.amount) }}</td>
+                        <td class="gold">KSH {{ "%.2f"|format(rental.daily_earning) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if rental.status == 'active' else 'info' if rental.status == 'completed' else 'danger' }}">
+                                {{ rental.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ rental.days_remaining() }}</td>
+                        <td>{{ rental.created_at.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if rentals.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if rentals.has_prev %}
+                <li class="page-item">
+                    <a class="page-link bg-dark text-white border-secondary" href="{{ url_for('admin.rentals', page=rentals.prev_num) }}">
+                        Previous
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for page in rentals.iter_pages() %}
+                    {% if page %}
+                        <li class="page-item {% if page == rentals.page %}active{% endif %}">
+                            <a class="page-link bg-dark text-white border-secondary {% if page == rentals.page %}gold-bg{% endif %}" 
+                               href="{{ url_for('admin.rentals', page=page) }}">
+                                {{ page }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link bg-dark text-white border-secondary">…</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if rentals.has_next %}
+                <li class="page-item">
+                    <a class="page-link bg-dark text-white border-secondary" href="{{ url_for('admin.rentals', page=rentals.next_num) }}">
+                        Next
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - {{ app_name or 'VCH' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tachometer-alt gold"></i> Admin Dashboard</h2>
+        <span class="badge bg-gold">Admin Panel</span>
+    </div>
+    <p class="text-muted-custom">Welcome to the admin panel. Manage users, vehicles, transactions and more.</p>
+    
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="number">{{ total_users|default(0) }}</div>
+                <div class="label">Total Users</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="number">{{ active_users|default(0) }}</div>
+                <div class="label">Active Users</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="number">{{ total_rentals|default(0) }}</div>
+                <div class="label">Total Rentals</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="number">{{ active_rentals|default(0) }}</div>
+                <div class="label">Active Rentals</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(total_deposits|default(0)) }}</div>
+                <div class="label">Total Deposits</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(total_withdrawals|default(0)) }}</div>
+                <div class="label">Total Withdrawals</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">KSH {{ "%.2f"|format(total_revenue|default(0)) }}</div>
+                <div class="label">Total Revenue</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <a href="{{ url_for('admin.users') }}" class="quick-action">
+                <i class="fas fa-users"></i>
+                <span>Manage Users</span>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('admin.vehicles') }}" class="quick-action">
+                <i class="fas fa-car"></i>
+                <span>Manage Vehicles</span>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('admin.rentals') }}" class="quick-action">
+                <i class="fas fa-calendar-check"></i>
+                <span>Manage Rentals</span>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('admin.withdrawals') }}" class="quick-action">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Withdrawals</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Recent Users -->
+    <div class="card-dark mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-user-plus gold"></i> Recent Users</h5>
+            <a href="{{ url_for('admin.users') }}" class="text-gold">View All →</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Balance</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in recent_users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.phone or 'N/A' }}</td>
+                        <td>KSH {{ "%.2f"|format(user.balance or 0) }}</td>
+                        <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="card-dark">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-history gold"></i> Recent Transactions</h5>
+            <a href="{{ url_for('admin.deposits') }}" class="text-gold">View All →</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in recent_transactions %}
+                    <tr>
+                        <td>{{ txn.user.username }}</td>
+                        <td>{{ txn.type|replace('_', ' ')|title }}</td>
+                        <td class="{% if txn.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                            KSH {{ "%.2f"|format(txn.amount) }}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if txn.status == 'completed' else 'warning' if txn.status == 'pending' else 'danger' }}">
+                                {{ txn.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ txn.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
