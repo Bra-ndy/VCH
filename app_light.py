@@ -191,16 +191,16 @@ def create_app(config_name='development'):
     # Health check endpoint for monitoring
     @app.route('/health')
     def health_check():
-        try:
-            db.session.execute('SELECT 1')
-            return jsonify({
-                'status': 'healthy',
-                'timestamp': datetime.now(timezone.utc).isoformat(),
-                'database': 'connected',
-                'm_pesa': 'configured' if app.config.get('MPESA_CONSUMER_KEY') else 'not configured'
-            })
-        except Exception as e:
-            return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
+    try:
+        # Use a simple SQLite query
+        db.session.execute('SELECT 1')
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'database': 'connected'
+        })
+    except Exception as e:
+        return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
     
     # Create tables
     with app.app_context():
