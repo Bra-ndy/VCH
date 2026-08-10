@@ -106,7 +106,7 @@ class Vehicle(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     brand = db.Column(db.String(50), nullable=False)
-    image = db.Column(db.String(200))
+    image = db.Column(db.String(200))  # ✅ Added image field for vehicle images
     
     # Pricing
     rental_price = db.Column(db.Float, nullable=False)  # Total rental cost

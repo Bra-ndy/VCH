@@ -82,21 +82,31 @@
     <h2 class="text-center mt-5 mb-4">Available <span class="gold">Cars</span></h2>
     <div class="row g-3">
         {% set cars = [
-            {'name': 'Ferrari', 'icon': 'fa-crown', 'daily': '500', 'price': '10,000'},
-            {'name': 'Porsche', 'icon': 'fa-bolt', 'daily': '400', 'price': '8,000'},
-            {'name': 'Jaguar', 'icon': 'fa-gem', 'daily': '350', 'price': '7,000'},
-            {'name': 'Mercedes', 'icon': 'fa-star', 'daily': '290', 'price': '5,500'},
-            {'name': 'BMW', 'icon': 'fa-car', 'daily': '230', 'price': '4,000'},
-            {'name': 'Isuzu', 'icon': 'fa-truck', 'daily': '200', 'price': '3,500'},
-            {'name': 'Mazda', 'icon': 'fa-route', 'daily': '170', 'price': '3,000'},
-            {'name': 'Toyota', 'icon': 'fa-shield-alt', 'daily': '150', 'price': '2,500'}
+            {'name': 'Ferrari', 'image': 'ferrari.jpg', 'daily': '500', 'price': '10,000'},
+            {'name': 'Porsche', 'image': 'porsche.jpg', 'daily': '400', 'price': '8,000'},
+            {'name': 'Jaguar', 'image': 'jaguar.jpg', 'daily': '350', 'price': '7,000'},
+            {'name': 'Mercedes', 'image': 'mercedes.jpg', 'daily': '290', 'price': '5,500'},
+            {'name': 'BMW', 'image': 'bmw.jpg', 'daily': '230', 'price': '4,000'},
+            {'name': 'Isuzu', 'image': 'isuzu.jpg', 'daily': '200', 'price': '3,500'},
+            {'name': 'Mazda', 'image': 'mazda.jpg', 'daily': '170', 'price': '3,000'},
+            {'name': 'Toyota', 'image': 'toyota.jpg', 'daily': '150', 'price': '2,500'}
         ] %}
         
         {% for car in cars %}
         <div class="col-6 col-md-3">
             <div class="card-dark text-center">
-                <i class="fas {{ car.icon }}" style="font-size: 2rem; color: var(--gold);"></i>
-                <h6 class="mt-2">{{ car.name }}</h6>
+                <div style="height: 100px; overflow: hidden; border-radius: 0.5rem; background: #1a1a1a; margin-bottom: 0.5rem;">
+                    {% if car.image %}
+                    <img src="{{ url_for('static', filename='images/cars/' + car.image) }}" 
+                         alt="{{ car.name }}" 
+                         style="height: 100px; width: 100%; object-fit: cover;">
+                    {% else %}
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                        <i class="fas fa-car" style="font-size: 2rem; color: var(--gold);"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <h6 class="mt-1">{{ car.name }}</h6>
                 <div class="gold fw-bold">KSH {{ car.daily }}/day</div>
                 <small class="text-muted-custom">KSH {{ car.price }} · 30d</small>
             </div>

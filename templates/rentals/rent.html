@@ -17,11 +17,16 @@
         <!-- Vehicle Details -->
         <div class="col-md-6">
             <div class="card-dark">
-                <div class="text-center mb-3">
-                    {% if vehicle.image %}
-                    <img src="{{ vehicle.image }}" alt="{{ vehicle.name }}" class="img-fluid rounded" style="max-height: 200px; width: 100%; object-fit: cover;">
+                <div class="text-center mb-3" style="height: 200px; overflow: hidden; border-radius: 0.5rem; background: #1a1a1a;">
+                    {% if vehicle.image and vehicle.image != '' %}
+                    <img src="{{ url_for('static', filename='images/cars/' + vehicle.image) }}" 
+                         alt="{{ vehicle.name }}" 
+                         class="img-fluid" 
+                         style="height: 200px; width: 100%; object-fit: cover;">
                     {% else %}
-                    <i class="fas fa-car" style="font-size: 5rem; color: var(--gold);"></i>
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                        <i class="fas fa-car" style="font-size: 5rem; color: var(--gold);"></i>
+                    </div>
                     {% endif %}
                 </div>
                 
