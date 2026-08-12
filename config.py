@@ -125,10 +125,10 @@ class DevelopmentConfig(Config):
     # Development M-Pesa settings
     MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL', 'https://your-domain.com/payments/mpesa/callback')
     
-    # Development admin settings
-    ADMIN_NAME = 'WINNY LANGAT'
-    ADMIN_MPESA_NUMBER = '0753796259'
-    ADMIN_MPESA_NUMBER_API = '254753796259'
+    # Development admin settings - convert to string
+    ADMIN_NAME = str(os.getenv('ADMIN_NAME', 'WINNY LANGAT'))
+    ADMIN_MPESA_NUMBER = str(os.getenv('ADMIN_MPESA_NUMBER', '0753796259'))
+    ADMIN_MPESA_NUMBER_API = str(os.getenv('ADMIN_MPESA_NUMBER_API', '254753796259'))
     DEPOSIT_VERIFICATION_REQUIRED = True
     
     # For local testing with ngrok, override callback URL
@@ -152,10 +152,10 @@ class ProductionConfig(Config):
     REMEMBER_COOKIE_SECURE = True
     PREFERRED_URL_SCHEME = 'https'
     
-    # Production admin settings (must be set in .env)
-    ADMIN_NAME = os.getenv('ADMIN_NAME', 'WINNY LANGAT')
-    ADMIN_MPESA_NUMBER = os.getenv('ADMIN_MPESA_NUMBER', '0753796259')
-    ADMIN_MPESA_NUMBER_API = os.getenv('ADMIN_MPESA_NUMBER_API', '254753796259')
+    # Production admin settings - convert to string
+    ADMIN_NAME = str(os.getenv('ADMIN_NAME', 'WINNY LANGAT'))
+    ADMIN_MPESA_NUMBER = str(os.getenv('ADMIN_MPESA_NUMBER', '0753796259'))
+    ADMIN_MPESA_NUMBER_API = str(os.getenv('ADMIN_MPESA_NUMBER_API', '254753796259'))
     DEPOSIT_VERIFICATION_REQUIRED = True
     
     # Validate admin number is set in production
@@ -164,7 +164,7 @@ class ProductionConfig(Config):
         value = os.getenv('ADMIN_MPESA_NUMBER')
         if not value:
             raise ValueError("ADMIN_MPESA_NUMBER must be set in production")
-        return value
+        return str(value)
 
 class TestingConfig(Config):
     TESTING = True
