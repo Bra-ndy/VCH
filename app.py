@@ -1,4 +1,4 @@
-# app.py - Updated version with M-Pesa integration and production-ready port
+# app.py - Updated version with M-Pesa integration, admin deposit verification, and production-ready port
 from flask import Flask, render_template, redirect, url_for, flash, request, session, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -54,13 +54,17 @@ def create_app(config_name='development'):
     app.register_blueprint(servicing_bp, url_prefix='/servicing')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     
-    # Context processor
+    # =============================================
+    # CONTEXT PROCESSOR - Add admin info for all templates
+    # =============================================
     @app.context_processor
     def utility_processor():
         return {
-            'app_name': app.config['APP_NAME'],
+            'app_name': app.config.get('APP_NAME', 'VCH'),
             'current_year': datetime.now(timezone.utc).year,
-            'agent_levels': app.config.get('AGENT_LEVELS', {})
+            'agent_levels': app.config.get('AGENT_LEVELS', {}),
+            'admin_name': app.config.get('ADMIN_NAME', 'WINNY LANGAT'),
+            'admin_number': app.config.get('ADMIN_MPESA_NUMBER', '0753796259')
         }
     
     # Home route
@@ -209,6 +213,22 @@ def create_app(config_name='development'):
             })
         except Exception as e:
             return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
+    
+    # =============================================
+    # RENDER ENVIRONMENT VARIABLE CHECK
+    # =============================================
+    @app.route('/env')
+    def show_env():
+        """Debug endpoint to check environment variables"""
+        import os
+        env_vars = {
+            'FLASK_ENV': os.environ.get('FLASK_ENV'),
+            'PORT': os.environ.get('PORT'),
+            'DATABASE_URL': os.environ.get('DATABASE_URL'),
+            'ADMIN_NAME': os.environ.get('ADMIN_NAME'),
+            'ADMIN_MPESA_NUMBER': os.environ.get('ADMIN_MPESA_NUMBER'),
+        }
+        return jsonify(env_vars)
     
     # Create tables
     with app.app_context():

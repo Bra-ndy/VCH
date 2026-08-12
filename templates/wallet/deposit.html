@@ -11,8 +11,18 @@
         </ol>
     </nav>
     
-    <h2><i class="fas fa-plus-circle gold"></i> Deposit Funds</h2>
-    <p class="text-muted-custom">Add funds to your wallet</p>
+    <div class="d-flex align-items-center">
+        <h2><i class="fas fa-plus-circle gold"></i> Deposit Funds</h2>
+        <span class="badge bg-warning ms-2" style="font-size: 0.8rem;">Manual Only</span>
+    </div>
+    <p class="text-muted-custom">STK Push is coming soon. Use manual deposit via admin.</p>
+    
+    <!-- Coming Soon Banner -->
+    <div class="alert alert-info mb-3">
+        <i class="fas fa-info-circle"></i>
+        <strong>STK Push Coming Soon!</strong>
+        M-Pesa STK Push is currently under development. Please use the manual deposit option below.
+    </div>
     
     <div class="row">
         <div class="col-md-6">
@@ -22,62 +32,68 @@
                     <div class="display-6 gold">KSH {{ "%.2f"|format(current_user.balance or 0) }}</div>
                 </div>
                 
-                <form method="POST" action="{{ url_for('wallet.deposit') }}" id="depositForm">
-                    {{ form.hidden_tag() if form else '' }}
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Amount (KSH)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-dark text-white border-secondary">KSH</span>
-                            <input type="number" name="amount" class="form-control" placeholder="Enter amount" min="10" step="1" required>
-                        </div>
-                        <small class="text-muted-custom">Minimum deposit: KSH 10</small>
+                <!-- Manual Deposit via Admin (Primary Option) -->
+                <div class="card-dark border-gold mb-3" style="border-color: var(--gold); border-width: 2px;">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-user-circle" style="font-size: 2rem; color: var(--gold);"></i>
+                        <h5 class="mb-0 ms-2">Deposit via Admin</h5>
+                        <span class="badge bg-success ms-2">Available Now</span>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Payment Method</label>
-                        <select name="payment_method" class="form-control" id="paymentMethod" required>
-                            <option value="mpesa">M-Pesa (STK Push)</option>
-                            <option value="bank">Bank Transfer</option>
-                        </select>
+                    <p class="text-muted-custom small">
+                        Send money to our official number and we'll verify your deposit.
+                    </p>
+                    <div class="text-center mb-3">
+                        <div class="text-muted-custom small">Pay to:</div>
+                        <div class="fw-bold gold">{{ admin_name or 'WINNY LANGAT' }}</div>
+                        <div class="display-6 gold" style="font-size: 2rem;">{{ admin_number or '0753796259' }}</div>
+                        <small class="text-muted-custom">Official VCH M-Pesa Number</small>
                     </div>
-                    
-                    <div class="mb-3" id="phoneField">
-                        <label class="form-label">M-Pesa Phone Number</label>
-                        <input type="tel" name="phone" class="form-control" placeholder="0700333444" id="phoneInput">
-                        <small class="text-muted-custom">Enter the phone number registered with M-Pesa</small>
-                        <div id="phoneError" class="text-danger small mt-1" style="display:none;">Please enter a valid phone number</div>
+                    <a href="{{ url_for('wallet.deposit_mpesa') }}" class="btn-gold w-100 text-center" style="display: block; padding: 0.7rem;">
+                        <i class="fas fa-paper-plane"></i> Submit M-Pesa Transaction
+                    </a>
+                </div>
+                
+                <!-- STK Push - Disabled with Coming Soon -->
+                <div class="card-dark" style="opacity: 0.5; pointer-events: none;">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-mobile-alt" style="font-size: 1.5rem; color: #666;"></i>
+                        <h6 class="mb-0 ms-2" style="color: #666;">M-Pesa STK Push</h6>
+                        <span class="badge bg-warning ms-2">Coming Soon</span>
                     </div>
-                    
-                    <button type="submit" class="btn-gold w-100" id="submitBtn">
-                        <i class="fas fa-check"></i> Deposit Now
-                    </button>
-                </form>
+                    <p class="text-muted-custom small" style="color: #666;">
+                        Instant M-Pesa deposits via STK Push. This feature is currently under development.
+                    </p>
+                    <div class="text-center py-2">
+                        <i class="fas fa-clock" style="color: #666;"></i>
+                        <span style="color: #666;"> Stay tuned for updates</span>
+                    </div>
+                </div>
             </div>
             
             <div class="card-dark mt-3">
                 <h6><i class="fas fa-info-circle gold"></i> How It Works</h6>
                 <ol class="text-muted-custom small mb-0">
-                    <li>Enter the amount you want to deposit</li>
-                    <li>Select M-Pesa as payment method</li>
-                    <li>Enter your M-Pesa phone number</li>
-                    <li>You'll receive a prompt on your phone to enter your PIN</li>
-                    <li>Funds will be credited instantly upon confirmation</li>
+                    <li>Send money to the admin number above via M-Pesa</li>
+                    <li>Click "Submit M-Pesa Transaction"</li>
+                    <li>Enter your transaction details</li>
+                    <li>Admin verifies your payment and adds funds</li>
+                    <li>You'll receive a notification when funds are added</li>
                 </ol>
             </div>
         </div>
         
         <div class="col-md-6">
+            <!-- Secure Deposits -->
             <div class="card-dark">
                 <h6><i class="fas fa-shield-alt gold"></i> Secure Deposits</h6>
-                <p class="text-muted-custom small">All deposits are processed securely through our payment partners.</p>
+                <p class="text-muted-custom small">All deposits are processed securely through our admin verification system.</p>
                 
                 <hr class="border-gold">
                 
                 <h6><i class="fas fa-clock gold"></i> Processing Time</h6>
                 <ul class="text-muted-custom small mb-0">
-                    <li><strong>M-Pesa:</strong> Instant (1-2 minutes)</li>
-                    <li><strong>Bank Transfer:</strong> 1-24 hours</li>
+                    <li><strong>Admin Verification:</strong> 5-30 minutes</li>
+                    <li><strong>STK Push:</strong> <span class="text-warning">Coming Soon</span></li>
                 </ul>
                 
                 <hr class="border-gold">
@@ -89,83 +105,30 @@
                 </p>
             </div>
             
+            <!-- Recent Deposits -->
             <div class="card-dark mt-3">
                 <h6><i class="fas fa-history gold"></i> Recent Deposits</h6>
                 <div id="recentDeposits">
-                    <p class="text-muted-custom small mb-0">Loading...</p>
+                    {% if recent_deposits %}
+                    <div class="list-group list-group-flush">
+                        {% for deposit in recent_deposits[:5] %}
+                        <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-{{ 'success' if deposit.status == 'completed' else 'warning' if deposit.status == 'pending' else 'danger' }}">
+                                    {{ deposit.status|title }}
+                                </span>
+                                <span class="text-muted-custom small ms-2">{{ deposit.created_at.strftime('%d/%m/%Y') }}</span>
+                            </div>
+                            <div class="text-success">KSH {{ "%.2f"|format(deposit.amount) }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted-custom small mb-0">No recent deposits</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const paymentMethod = document.getElementById('paymentMethod');
-    const phoneField = document.getElementById('phoneField');
-    const phoneInput = document.getElementById('phoneInput');
-    const phoneError = document.getElementById('phoneError');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    function validatePhone(phone) {
-        // Remove any non-digit characters
-        phone = phone.replace(/\D/g, '');
-        // Check if it's a valid Kenyan number
-        if (phone.length === 10 && phone.startsWith('0')) {
-            return true;
-        }
-        if (phone.length === 12 && phone.startsWith('254')) {
-            return true;
-        }
-        if (phone.length === 9) {
-            return true;
-        }
-        return false;
-    }
-    
-    paymentMethod.addEventListener('change', function() {
-        if (this.value === 'mpesa') {
-            phoneField.style.display = 'block';
-            phoneInput.required = true;
-        } else {
-            phoneField.style.display = 'none';
-            phoneInput.required = false;
-        }
-    });
-    
-    phoneInput.addEventListener('input', function() {
-        if (validatePhone(this.value)) {
-            phoneError.style.display = 'none';
-        } else if (this.value.length > 0) {
-            phoneError.style.display = 'block';
-        } else {
-            phoneError.style.display = 'none';
-        }
-    });
-    
-    // Trigger on load
-    paymentMethod.dispatchEvent(new Event('change'));
-    
-    // Form validation
-    document.getElementById('depositForm').addEventListener('submit', function(e) {
-        if (paymentMethod.value === 'mpesa') {
-            if (!validatePhone(phoneInput.value)) {
-                e.preventDefault();
-                phoneError.style.display = 'block';
-                phoneInput.focus();
-                return false;
-            }
-        }
-        
-        // Show loading state
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        
-        setTimeout(function() {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-check"></i> Deposit Now';
-        }, 30000); // Re-enable after 30 seconds
-    });
-});
-</script>
 {% endblock %}

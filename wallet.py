@@ -1,5 +1,5 @@
-# wallet.py - Blueprint ONLY (NO utility functions)
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+# wallet.py - Complete wallet blueprint with all routes
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 from sqlalchemy import func
@@ -23,112 +23,122 @@ def wallet():
     return render_template('wallet/wallet.html', 
                          recent_transactions=recent_transactions)
 
+# =============================================
+# DEPOSIT - DISABLED STK PUSH, USING MANUAL ONLY
+# =============================================
 @wallet_bp.route('/deposit', methods=['GET', 'POST'])
 @login_required
 def deposit():
-    """Deposit funds - supports both manual and M-Pesa"""
+    """Deposit funds - Manual deposit via admin only (STK Push disabled)"""
     form = DepositForm()
+    recent_deposits = Transaction.query.filter(
+        Transaction.user_id == current_user.id,
+        Transaction.type == 'deposit'
+    ).order_by(Transaction.created_at.desc()).limit(10).all()
+    
+    # Get admin info from config
+    admin_name = current_app.config.get('ADMIN_NAME', 'WINNY LANGAT')
+    admin_number = current_app.config.get('ADMIN_MPESA_NUMBER', '0753796259')
+    
+    # STK Push is disabled - Coming Soon
+    # Redirect to manual deposit page if POST request
+    if request.method == 'POST':
+        flash('STK Push is coming soon! Please use the manual deposit option via admin.', 'info')
+        return redirect(url_for('wallet.deposit_mpesa'))
+    
+    return render_template('wallet/deposit.html', 
+                         form=form, 
+                         recent_deposits=recent_deposits, 
+                         admin_name=admin_name, 
+                         admin_number=admin_number)
+
+# =============================================
+# DEPOSIT VIA ADMIN (Manual M-Pesa Verification)
+# =============================================
+@wallet_bp.route('/deposit/mpesa', methods=['GET', 'POST'])
+@login_required
+def deposit_mpesa():
+    """Deposit via M-Pesa - Admin verification required"""
+    
+    # Get admin info from config
+    admin_name = current_app.config.get('ADMIN_NAME', 'WINNY LANGAT')
+    admin_number = current_app.config.get('ADMIN_MPESA_NUMBER', '0753796259')
+    
+    # Get recent deposits
+    recent_deposits = Transaction.query.filter(
+        Transaction.user_id == current_user.id,
+        Transaction.type == 'deposit',
+        Transaction.payment_method == 'mpesa_manual'
+    ).order_by(Transaction.created_at.desc()).limit(10).all()
     
     if request.method == 'POST':
         amount = request.form.get('amount', type=float)
-        payment_method = request.form.get('payment_method', 'mpesa')
-        phone = request.form.get('phone', '')
+        transaction_code = request.form.get('transaction_code', '').strip()
+        phone = request.form.get('phone', '').strip()
         
-        logger.info(f"Deposit attempt: amount={amount}, method={payment_method}, phone={phone}")
-        
+        # Validate
+        errors = []
         if not amount or amount <= 0:
-            flash('Please enter a valid amount.', 'danger')
-            return render_template('wallet/deposit.html', form=form)
+            errors.append('Please enter a valid amount')
+        if not transaction_code:
+            errors.append('Please enter your M-Pesa transaction code')
+        if not phone:
+            errors.append('Please enter your phone number')
         
-        # If M-Pesa, initiate STK Push
-        if payment_method == 'mpesa':
-            if not phone:
-                flash('Please enter your M-Pesa phone number.', 'danger')
-                return render_template('wallet/deposit.html', form=form)
-            
-            try:
-                from utils.mpesa import MpesaAPI
-                
-                # Format phone number
-                phone_clean = re.sub(r'\D', '', phone)
-                if phone_clean.startswith('0'):
-                    phone_clean = '254' + phone_clean[1:]
-                elif len(phone_clean) == 9:
-                    phone_clean = '254' + phone_clean
-                elif len(phone_clean) == 10 and not phone_clean.startswith('254'):
-                    phone_clean = '254' + phone_clean[1:]
-                
-                if not phone_clean.startswith('254'):
-                    phone_clean = '254' + phone_clean
-                
-                logger.info(f"Formatted phone: {phone_clean}")
-                
-                # Create transaction
-                transaction = Transaction(
-                    user_id=current_user.id,
-                    type='deposit',
-                    amount=amount,
-                    fee=0,
-                    net_amount=amount,
-                    description='M-Pesa Deposit',
-                    status='pending',
-                    payment_method='mpesa',
-                    payment_reference=phone_clean
-                )
-                db.session.add(transaction)
-                db.session.commit()
-                
-                logger.info(f"Transaction created: {transaction.transaction_id}")
-                
-                # Initiate STK Push
-                mpesa = MpesaAPI()
-                result = mpesa.stk_push(
-                    phone_number=phone_clean,
-                    amount=amount,
-                    account_reference=transaction.transaction_id,
-                    transaction_desc='VCH Deposit'
-                )
-                
-                logger.info(f"STK Push result: {result}")
-                
-                if result['success']:
-                    transaction.payment_reference = result.get('checkout_request_id')
-                    db.session.commit()
-                    
-                    flash('M-Pesa payment initiated. Please check your phone and enter your PIN.', 'success')
-                    # FIXED: Correct route name for M-Pesa status page
-                    return redirect(url_for('payments.mpesa_status', transaction_id=transaction.transaction_id))
-                else:
-                    transaction.status = 'failed'
-                    db.session.commit()
-                    flash(f'M-Pesa payment failed: {result.get("error", "Unknown error")}', 'danger')
-                    return render_template('wallet/deposit.html', form=form)
-                    
-            except Exception as e:
-                logger.error(f"Error in M-Pesa deposit: {e}")
-                import traceback
-                traceback.print_exc()
-                flash(f'Error initiating M-Pesa payment: {str(e)}', 'danger')
-                return render_template('wallet/deposit.html', form=form)
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('wallet/deposit_mpesa.html', 
+                                 admin_name=admin_name,
+                                 admin_number=admin_number,
+                                 recent_deposits=recent_deposits)
         
-        # Regular deposit (non-M-Pesa)
+        # Format phone number
+        phone = re.sub(r'\D', '', phone)
+        if phone.startswith('0'):
+            phone = '254' + phone[1:]
+        elif len(phone) == 9:
+            phone = '254' + phone
+        elif len(phone) == 10 and not phone.startswith('254'):
+            phone = '254' + phone[1:]
+        
         try:
-            transaction = process_deposit(
+            # Create pending deposit
+            from utils.wallet import create_pending_deposit
+            transaction = create_pending_deposit(
                 user_id=current_user.id,
                 amount=amount,
-                payment_method=payment_method,
+                transaction_code=transaction_code,
                 phone=phone
             )
             
-            flash(f'Deposit of KSH {amount:,.2f} completed successfully!', 'success')
-            return redirect(url_for('wallet.transactions'))
-        
+            flash(f'Deposit submitted successfully! Your transaction code {transaction_code} is being verified.', 'success')
+            return redirect(url_for('wallet.deposit_mpesa'))
+            
         except ValueError as e:
             flash(str(e), 'danger')
         except Exception as e:
-            flash(f'Error processing deposit: {str(e)}', 'danger')
+            logger.error(f"Deposit M-Pesa error: {e}")
+            flash('Error submitting deposit. Please try again.', 'danger')
     
-    return render_template('wallet/deposit.html', form=form)
+    return render_template('wallet/deposit_mpesa.html', 
+                         admin_name=admin_name,
+                         admin_number=admin_number,
+                         recent_deposits=recent_deposits)
+
+# =============================================
+# STK PUSH - COMING SOON (Disabled)
+# =============================================
+@wallet_bp.route('/deposit/stk-push')
+@login_required
+def stk_push_coming_soon():
+    """Show coming soon message for STK Push"""
+    flash('STK Push feature is coming soon! Please use the manual deposit option via admin.', 'info')
+    return redirect(url_for('wallet.deposit'))
+
+# =============================================
+# OTHER WALLET ROUTES
+# =============================================
 
 @wallet_bp.route('/withdraw', methods=['GET', 'POST'])
 @login_required
@@ -188,7 +198,7 @@ def transactions():
 @wallet_bp.route('/earnings')
 @login_required
 def earnings():
-    today = datetime.now().date()
+    today = datetime.utcnow().date()
     today_earnings = Transaction.query.filter(
         Transaction.user_id == current_user.id,
         db.func.date(Transaction.created_at) == today,

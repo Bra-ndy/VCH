@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash
 from datetime import datetime, timezone
 import re
 
-from models import db, User, Notification, ActivityLog
+from models import db, User, Notification, ActivityLog, ReferralBonus, Transaction
 from forms import LoginForm, RegistrationForm, ForgotPasswordForm, ResetPasswordForm
 from utils.email import send_verification_email, send_password_reset_email
 from utils.sms import send_sms
@@ -123,23 +123,72 @@ def register():
         )
         user.set_password(form.password.data)
         
-        # Handle referral
-        if form.referral_code.data:
-            referrer = User.query.filter_by(referral_code=form.referral_code.data.upper()).first()
-            if referrer:
-                user.referred_by = referrer.id
-                # Update referrer's count
-                referrer.referral_count += 1
-                # Update referrer's agent level
-                referrer.update_agent_level()
-                db.session.add(referrer)
+        # Store referral code for later use
+        referral_code_used = form.referral_code.data
         
         # Generate verification token
         token = generate_verification_token(user.email)
         
         try:
             db.session.add(user)
+            db.session.flush()  # This assigns an ID to user without committing
+            
+            # Handle referral with bonus
+            if referral_code_used:
+                referrer = User.query.filter_by(referral_code=referral_code_used.upper()).first()
+                if referrer:
+                    user.referred_by = referrer.id
+                    # Update referrer's count
+                    referrer.referral_count += 1
+                    # Update referrer's agent level
+                    referrer.update_agent_level()
+                    
+                    # =============================================
+                    # ADD BONUS TO REFERRER'S BALANCE
+                    # =============================================
+                    bonus_amount = 100.0  # KSH 100 as referral bonus
+                    
+                    # Add to referrer's balance
+                    referrer.balance += bonus_amount
+                    referrer.total_earned += bonus_amount
+                    
+                    # Create referral bonus record
+                    referral_bonus = ReferralBonus(
+                        referrer_id=referrer.id,
+                        referred_id=user.id,
+                        amount=bonus_amount,
+                        type='signup_bonus',
+                        is_paid=True,
+                        paid_at=datetime.utcnow()
+                    )
+                    db.session.add(referral_bonus)
+                    
+                    # Create transaction record for the bonus
+                    transaction = Transaction(
+                        user_id=referrer.id,
+                        type='referral_bonus',
+                        amount=bonus_amount,
+                        fee=0,
+                        net_amount=bonus_amount,
+                        description=f'Referral bonus for {user.username}',
+                        status='completed'
+                    )
+                    db.session.add(transaction)
+                    
+                    # Create notification for referrer
+                    notification = Notification(
+                        user_id=referrer.id,
+                        title='Referral Bonus Earned! 🎉',
+                        message=f'You earned KSH {bonus_amount:,.2f} for referring {user.username}!',
+                        type='success'
+                    )
+                    db.session.add(notification)
+                    
+                    db.session.add(referrer)
+                    print(f"✅ Referral bonus: KSH {bonus_amount} added to {referrer.username}'s balance")
+            
             db.session.commit()
+            
         except Exception as e:
             db.session.rollback()
             flash(f'Error creating account: {str(e)}', 'danger')
@@ -158,7 +207,7 @@ def register():
         except Exception as e:
             print(f"Error sending welcome SMS: {e}")
         
-        # Create notification
+        # Create notification for new user
         try:
             notification = Notification(
                 user_id=user.id,

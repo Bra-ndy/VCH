@@ -51,6 +51,26 @@ class Config:
     MPESA_TRANSACTION_STATUS_URL = '/mpesa/transactionstatus/v1/query'
     MPESA_REVERSAL_URL = '/mpesa/reversal/v1/request'
     
+    # =============================================
+    # ADMIN DEPOSIT SETTINGS
+    # =============================================
+    # Admin name for deposits
+    ADMIN_NAME = os.getenv('ADMIN_NAME', 'WINNY LANGAT')
+    
+    # Admin phone number for deposits (formatted for display)
+    ADMIN_MPESA_NUMBER = os.getenv('ADMIN_MPESA_NUMBER', '0753796259')
+    
+    # Admin phone number for M-Pesa (formatted for API - with country code)
+    ADMIN_MPESA_NUMBER_API = os.getenv('ADMIN_MPESA_NUMBER_API', '254753796259')
+    
+    # Require admin verification for manual M-Pesa deposits
+    DEPOSIT_VERIFICATION_REQUIRED = os.getenv('DEPOSIT_VERIFICATION_REQUIRED', 'True') == 'True'
+    
+    # Time (in minutes) after which pending deposits are considered stale
+    DEPOSIT_STALE_MINUTES = int(os.getenv('DEPOSIT_STALE_MINUTES', '60'))
+    
+    # =============================================
+    
     # Redis/Celery
     REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
     
@@ -105,6 +125,12 @@ class DevelopmentConfig(Config):
     # Development M-Pesa settings
     MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL', 'https://your-domain.com/payments/mpesa/callback')
     
+    # Development admin settings
+    ADMIN_NAME = 'WINNY LANGAT'
+    ADMIN_MPESA_NUMBER = '0753796259'
+    ADMIN_MPESA_NUMBER_API = '254753796259'
+    DEPOSIT_VERIFICATION_REQUIRED = True
+    
     # For local testing with ngrok, override callback URL
     @property
     def MPESA_CALLBACK_URL(self):
@@ -125,6 +151,20 @@ class ProductionConfig(Config):
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
     PREFERRED_URL_SCHEME = 'https'
+    
+    # Production admin settings (must be set in .env)
+    ADMIN_NAME = os.getenv('ADMIN_NAME', 'WINNY LANGAT')
+    ADMIN_MPESA_NUMBER = os.getenv('ADMIN_MPESA_NUMBER', '0753796259')
+    ADMIN_MPESA_NUMBER_API = os.getenv('ADMIN_MPESA_NUMBER_API', '254753796259')
+    DEPOSIT_VERIFICATION_REQUIRED = True
+    
+    # Validate admin number is set in production
+    @property
+    def ADMIN_MPESA_NUMBER(self):
+        value = os.getenv('ADMIN_MPESA_NUMBER')
+        if not value:
+            raise ValueError("ADMIN_MPESA_NUMBER must be set in production")
+        return value
 
 class TestingConfig(Config):
     TESTING = True
@@ -135,6 +175,10 @@ class TestingConfig(Config):
     MPESA_CONSUMER_SECRET = 'test_secret'
     MPESA_PASSKEY = 'test_passkey'
     MPESA_SHORTCODE = '174379'
+    ADMIN_NAME = 'WINNY LANGAT'
+    ADMIN_MPESA_NUMBER = '0753796259'
+    ADMIN_MPESA_NUMBER_API = '254753796259'
+    DEPOSIT_VERIFICATION_REQUIRED = False
 
 config = {
     'development': DevelopmentConfig,
