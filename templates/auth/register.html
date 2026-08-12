@@ -2,160 +2,750 @@
 
 {% block title %}Register - {{ app_name or 'VCH' }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .register-container {
+        max-width: 600px;
+        margin: 2rem auto;
+    }
+    
+    .register-card {
+        background: #141414;
+        border: 1px solid #2a2a2a;
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    .register-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .register-header .icon {
+        font-size: 3rem;
+        color: var(--gold);
+        margin-bottom: 0.5rem;
+    }
+    
+    .register-header h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    
+    .register-header p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+    
+    .promo-banner {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        border-radius: 0.75rem;
+        padding: 0.8rem 1rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .promo-banner i {
+        color: var(--gold);
+        margin-right: 0.5rem;
+    }
+    
+    .promo-banner span {
+        color: var(--gold);
+        font-weight: 600;
+    }
+    
+    /* Error Summary */
+    .error-summary {
+        background: rgba(220, 53, 69, 0.1);
+        border: 1px solid rgba(220, 53, 69, 0.3);
+        border-radius: 0.75rem;
+        padding: 1rem 1.2rem;
+        margin-bottom: 1.5rem;
+        display: none;
+    }
+    
+    .error-summary.show {
+        display: block;
+    }
+    
+    .error-summary .title {
+        color: #dc3545;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .error-summary .title i {
+        margin-right: 0.5rem;
+    }
+    
+    .error-summary ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        color: #dc3545;
+        font-size: 0.9rem;
+    }
+    
+    .error-summary ul li {
+        margin-bottom: 0.2rem;
+    }
+    
+    /* Form Groups */
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    
+    .form-group label {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 0.3rem;
+    }
+    
+    .form-group label .required {
+        color: #dc3545;
+        margin-left: 0.2rem;
+    }
+    
+    .input-wrapper {
+        position: relative;
+    }
+    
+    .input-wrapper .input-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 1rem;
+        z-index: 2;
+    }
+    
+    .input-wrapper .form-control {
+        padding-left: 40px;
+        padding-right: 45px;
+    }
+    
+    .input-wrapper .toggle-password {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 5px;
+        transition: color 0.3s ease;
+        z-index: 2;
+    }
+    
+    .input-wrapper .toggle-password:hover {
+        color: var(--gold);
+    }
+    
+    .input-wrapper .toggle-password .fa-eye-slash {
+        display: none;
+    }
+    
+    .input-wrapper .toggle-password.show .fa-eye {
+        display: none;
+    }
+    
+    .input-wrapper .toggle-password.show .fa-eye-slash {
+        display: inline;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: #1a1a1a;
+        border: 2px solid #2a2a2a;
+        border-radius: 0.75rem;
+        color: #ffffff;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+    }
+    
+    .form-control.error {
+        border-color: #dc3545;
+        background: rgba(220, 53, 69, 0.05);
+    }
+    
+    .form-control.error:focus {
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+    }
+    
+    .form-control.success {
+        border-color: #28a745;
+    }
+    
+    .form-control.success:focus {
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.15);
+    }
+    
+    .field-error {
+        color: #dc3545;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        display: none;
+    }
+    
+    .field-error.show {
+        display: block;
+    }
+    
+    .field-error i {
+        margin-right: 0.3rem;
+    }
+    
+    .field-hint {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        margin-top: 0.3rem;
+    }
+    
+    /* Checkbox */
+    .checkbox-group {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        accent-color: var(--gold);
+        cursor: pointer;
+    }
+    
+    .checkbox-group label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    
+    .checkbox-group label a {
+        color: var(--gold);
+        text-decoration: none;
+    }
+    
+    .checkbox-group label a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Buttons */
+    .btn-register {
+        width: 100%;
+        padding: 0.9rem;
+        background: var(--gold);
+        color: #0b0b0b;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 0.5rem;
+    }
+    
+    .btn-register:hover {
+        background: var(--gold-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    }
+    
+    .btn-register:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    /* Divider */
+    .divider {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #2a2a2a;
+    }
+    
+    .divider span {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+    
+    /* Footer */
+    .register-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+    
+    .register-footer p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+    
+    .register-footer a {
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .register-footer a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Password strength */
+    .password-strength {
+        display: flex;
+        gap: 0.3rem;
+        margin-top: 0.3rem;
+    }
+    
+    .password-strength .bar {
+        flex: 1;
+        height: 4px;
+        background: #2a2a2a;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+    }
+    
+    .password-strength .bar.weak { background: #dc3545; }
+    .password-strength .bar.fair { background: #ffc107; }
+    .password-strength .bar.good { background: #28a745; }
+    .password-strength .bar.strong { background: #17a2b8; }
+    
+    .password-strength-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 576px) {
+        .register-card {
+            padding: 1.5rem;
+        }
+        
+        .register-header h2 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card-dark">
-                <div class="text-center mb-4">
-                    <i class="fas fa-car" style="font-size: 3rem; color: var(--gold);"></i>
-                    <h2 class="mt-2">{{ app_name or 'VCH' }}</h2>
-                    <h4>Create Account</h4>
-                    <p class="text-muted-custom small">
-                        🎉 New members receive 10,000 points and a FREE Duck that earns KSH 5/day!
-                    </p>
+<div class="container py-4">
+    <div class="register-container">
+        <div class="register-card">
+            <!-- Header -->
+            <div class="register-header">
+                <div class="icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <h2>Create Account</h2>
+                <p>Join VCH and start earning today</p>
+            </div>
+            
+            <!-- Promo Banner -->
+            <div class="promo-banner">
+                <i class="fas fa-gift"></i>
+                New members receive <span>10,000 points</span> and a FREE Duck that earns <span>KSH 5/day</span>!
+            </div>
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' if category == 'danger' else 'info-circle' }}"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Error Summary -->
+            {% if form and form.errors %}
+            <div class="error-summary show">
+                <div class="title">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Please fix the following errors:
+                </div>
+                <ul>
+                    {% for field, errors in form.errors.items() %}
+                        {% for error in errors %}
+                            <li>{{ field|replace('_', ' ')|title }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- Registration Form -->
+            <form method="POST" action="{{ url_for('auth.register') }}" id="registerForm" novalidate>
+                {{ form.hidden_tag() if form else '' }}
+                
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="username">
+                        Username <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon"><i class="fas fa-user"></i></span>
+                        <input type="text" 
+                               name="username" 
+                               id="username" 
+                               class="form-control {% if form and form.username.errors %}error{% endif %}"
+                               placeholder="Choose a username" 
+                               value="{{ form.username.data or '' }}"
+                               required>
+                    </div>
+                    <div class="field-error {% if form and form.username.errors %}show{% endif %}">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% if form and form.username.errors %}
+                            {{ form.username.errors[0] }}
+                        {% else %}
+                            Please enter a username
+                        {% endif %}
+                    </div>
+                    <div class="field-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Must be unique, 3-80 characters, letters, numbers, and underscores only
+                    </div>
                 </div>
                 
-                <!-- Flash Messages -->
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                
-                <!-- Form Errors -->
-                {% if form and form.errors %}
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <strong>Please fix the following errors:</strong>
-                        <ul class="mb-0">
-                            {% for field, errors in form.errors.items() %}
-                                {% for error in errors %}
-                                    <li>{{ field|replace('_', ' ')|title }}: {{ error }}</li>
-                                {% endfor %}
-                            {% endfor %}
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email">
+                        Email Address <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+                        <input type="email" 
+                               name="email" 
+                               id="email" 
+                               class="form-control {% if form and form.email.errors %}error{% endif %}"
+                               placeholder="you@example.com" 
+                               value="{{ form.email.data or '' }}"
+                               required>
                     </div>
+                    <div class="field-error {% if form and form.email.errors %}show{% endif %}">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% if form and form.email.errors %}
+                            {{ form.email.errors[0] }}
+                        {% else %}
+                            Please enter a valid email address
+                        {% endif %}
+                    </div>
+                    <div class="field-hint">
+                        <i class="fas fa-info-circle"></i>
+                        We'll send a verification link to this email
+                    </div>
+                </div>
+                
+                <!-- Phone -->
+                <div class="form-group">
+                    <label for="phone">
+                        Phone Number <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon"><i class="fas fa-phone"></i></span>
+                        <input type="tel" 
+                               name="phone" 
+                               id="phone" 
+                               class="form-control {% if form and form.phone.errors %}error{% endif %}"
+                               placeholder="254712345678" 
+                               value="{{ form.phone.data or '' }}"
+                               required>
+                    </div>
+                    <div class="field-error {% if form and form.phone.errors %}show{% endif %}">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% if form and form.phone.errors %}
+                            {{ form.phone.errors[0] }}
+                        {% else %}
+                            Please enter a valid phone number
+                        {% endif %}
+                    </div>
+                    <div class="field-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Enter with country code (e.g., 254 for Kenya)
+                    </div>
+                </div>
+                
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">
+                        Password <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        <input type="password" 
+                               name="password" 
+                               id="password" 
+                               class="form-control {% if form and form.password.errors %}error{% endif %}"
+                               placeholder="Min 8 characters" 
+                               required>
+                        <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye"></i>
+                            <i class="fas fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div class="field-error {% if form and form.password.errors %}show{% endif %}">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% if form and form.password.errors %}
+                            {{ form.password.errors[0] }}
+                        {% else %}
+                            Password must be at least 8 characters
+                        {% endif %}
+                    </div>
+                    <div class="password-strength" id="passwordStrength">
+                        <div class="bar" data-strength="0"></div>
+                        <div class="bar" data-strength="1"></div>
+                        <div class="bar" data-strength="2"></div>
+                        <div class="bar" data-strength="3"></div>
+                    </div>
+                    <div class="password-strength-label" id="strengthLabel">Enter a strong password</div>
+                </div>
+                
+                <!-- Confirm Password -->
+                <div class="form-group">
+                    <label for="password_confirm">
+                        Confirm Password <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon"><i class="fas fa-check-circle"></i></span>
+                        <input type="password" 
+                               name="password_confirm" 
+                               id="password_confirm" 
+                               class="form-control {% if form and form.password_confirm.errors %}error{% endif %}"
+                               placeholder="Confirm your password" 
+                               required>
+                        <button type="button" class="toggle-password" id="toggleConfirmPassword" aria-label="Toggle confirm password visibility">
+                            <i class="fas fa-eye"></i>
+                            <i class="fas fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div class="field-error {% if form and form.password_confirm.errors %}show{% endif %}">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% if form and form.password_confirm.errors %}
+                            {{ form.password_confirm.errors[0] }}
+                        {% else %}
+                            Passwords must match
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Referral Code -->
+                <div class="form-group">
+                    <label for="referral_code">
+                        Referral Code <span style="color: var(--text-muted); font-weight: 400;">(Optional)</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon"><i class="fas fa-user-plus"></i></span>
+                        <input type="text" 
+                               name="referral_code" 
+                               id="referral_code" 
+                               class="form-control {% if form and form.referral_code.errors %}error{% endif %}"
+                               placeholder="Enter referral code from inviter" 
+                               value="{{ form.referral_code.data or '' }}">
+                    </div>
+                    <div class="field-error {% if form and form.referral_code.errors %}show{% endif %}">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% if form and form.referral_code.errors %}
+                            {{ form.referral_code.errors[0] }}
+                        {% endif %}
+                    </div>
+                    <div class="field-hint">
+                        <i class="fas fa-info-circle"></i>
+                        If you were invited by someone, enter their referral code
+                    </div>
+                </div>
+                
+                <!-- Terms -->
+                <div class="checkbox-group">
+                    <input type="checkbox" 
+                           name="agree_terms" 
+                           id="agree_terms" 
+                           {% if form and form.agree_terms.data %}checked{% endif %}
+                           required>
+                    <label for="agree_terms">
+                        I agree to the <a href="#" class="gold">Terms and Conditions</a>
+                        <span class="required">*</span>
+                    </label>
+                </div>
+                {% if form and form.agree_terms.errors %}
+                <div class="field-error show" style="margin-top: -0.5rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ form.agree_terms.errors[0] }}
+                </div>
                 {% endif %}
                 
-                <form method="POST" action="{{ url_for('auth.register') }}">
-                    {{ form.hidden_tag() if form else '' }}
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" name="username" class="form-control {% if form and form.username.errors %}is-invalid{% endif %}" 
-                               placeholder="Your name" value="{{ form.username.data or '' }}" required>
-                        {% if form and form.username.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.username.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-control {% if form and form.email.errors %}is-invalid{% endif %}" 
-                               placeholder="you@example.com" value="{{ form.email.data or '' }}" required>
-                        {% if form and form.email.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.email.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Phone Number</label>
-                        <input type="tel" name="phone" class="form-control {% if form and form.phone.errors %}is-invalid{% endif %}" 
-                               placeholder="0703338493" value="{{ form.phone.data or '' }}" required>
-                        <small class="text-muted-custom">Enter your phone number (e.g., 0703338493 or 254703338493)</small>
-                        {% if form and form.phone.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.phone.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control {% if form and form.password.errors %}is-invalid{% endif %}" 
-                               placeholder="Min 8 characters" required>
-                        <small class="text-muted-custom">Must contain at least 8 characters, one letter and one number</small>
-                        {% if form and form.password.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.password.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Confirm Password</label>
-                        <input type="password" name="password_confirm" class="form-control {% if form and form.password_confirm.errors %}is-invalid{% endif %}" 
-                               placeholder="Confirm your password" required>
-                        {% if form and form.password_confirm.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.password_confirm.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Referral Code (Optional)</label>
-                        <input type="text" name="referral_code" class="form-control {% if form and form.referral_code.errors %}is-invalid{% endif %}" 
-                               placeholder="Enter referral code from inviter" value="{{ form.referral_code.data or '' }}">
-                        <small class="text-muted-custom">If you were invited by someone, enter their referral code</small>
-                        {% if form and form.referral_code.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.referral_code.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" name="agree_terms" class="form-check-input {% if form and form.agree_terms.errors %}is-invalid{% endif %}" 
-                               id="agree_terms" {% if form and form.agree_terms.data %}checked{% endif %} required>
-                        <label class="form-check-label" for="agree_terms">
-                            I agree to the <a href="#" class="gold">Terms and Conditions</a>
-                        </label>
-                        {% if form and form.agree_terms.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.agree_terms.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <button type="submit" class="btn-gold w-100">
-                        <i class="fas fa-user-plus"></i> Create Account
-                    </button>
-                </form>
-                
-                <hr class="border-gold my-4">
-                
-                <div class="text-center">
-                    <p class="mb-0">
-                        Already have an account? <a href="{{ url_for('auth.login') }}" class="gold">Login here</a>
-                    </p>
-                </div>
+                <!-- Submit -->
+                <button type="submit" class="btn-register" id="registerBtn">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+            
+            <div class="divider">
+                <span>Already have an account?</span>
+            </div>
+            
+            <div class="register-footer">
+                <p>
+                    <a href="{{ url_for('auth.login') }}">
+                        <i class="fas fa-sign-in-alt"></i> Login here
+                    </a>
+                </p>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle Password Visibility
+    function togglePasswordVisibility(toggleBtn, inputField) {
+        toggleBtn.addEventListener('click', function() {
+            const type = inputField.getAttribute('type') === 'password' ? 'text' : 'password';
+            inputField.setAttribute('type', type);
+            this.classList.toggle('show');
+            
+            // Update icon
+            const eyeIcon = this.querySelector('.fa-eye');
+            const eyeSlashIcon = this.querySelector('.fa-eye-slash');
+            if (type === 'text') {
+                eyeIcon.style.display = 'none';
+                eyeSlashIcon.style.display = 'inline';
+            } else {
+                eyeIcon.style.display = 'inline';
+                eyeSlashIcon.style.display = 'none';
+            }
+        });
+    }
+    
+    // Password toggle
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    togglePasswordVisibility(togglePassword, passwordInput);
+    
+    // Confirm password toggle
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    const confirmPasswordInput = document.getElementById('password_confirm');
+    togglePasswordVisibility(toggleConfirmPassword, confirmPasswordInput);
+    
+    // Password strength checker
+    const strengthBars = document.querySelectorAll('#passwordStrength .bar');
+    const strengthLabel = document.getElementById('strengthLabel');
+    const registerBtn = document.getElementById('registerBtn');
+    const form = document.getElementById('registerForm');
+    
+    // Password strength
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        const strength = checkPasswordStrength(password);
+        updateStrengthBars(strength);
+    });
+    
+    function checkPasswordStrength(password) {
+        let score = 0;
+        if (password.length >= 8) score++;
+        if (password.match(/[a-z]/)) score++;
+        if (password.match(/[A-Z]/)) score++;
+        if (password.match(/[0-9]/)) score++;
+        if (password.match(/[^a-zA-Z0-9]/)) score++;
+        return Math.min(score, 4);
+    }
+    
+    function updateStrengthBars(strength) {
+        const labels = ['Weak', 'Fair', 'Good', 'Strong'];
+        const colors = ['#dc3545', '#ffc107', '#28a745', '#17a2b8'];
+        
+        strengthBars.forEach((bar, index) => {
+            if (index < strength) {
+                bar.style.background = colors[index];
+                bar.style.height = '4px';
+            } else {
+                bar.style.background = '#2a2a2a';
+                bar.style.height = '4px';
+            }
+        });
+        
+        if (strength > 0) {
+            strengthLabel.textContent = `Password strength: ${labels[strength - 1]}`;
+            strengthLabel.style.color = colors[strength - 1];
+        } else {
+            strengthLabel.textContent = 'Enter a strong password';
+            strengthLabel.style.color = '#9a9a9a';
+        }
+    }
+    
+    // Confirm password match
+    confirmPasswordInput.addEventListener('input', function() {
+        const password = passwordInput.value;
+        const confirm = this.value;
+        
+        if (confirm.length > 0 && password !== confirm) {
+            this.classList.add('error');
+            this.style.borderColor = '#dc3545';
+        } else if (confirm.length > 0) {
+            this.classList.remove('error');
+            this.style.borderColor = '#28a745';
+        } else {
+            this.classList.remove('error');
+            this.style.borderColor = '#2a2a2a';
+        }
+    });
+    
+    // Form validation before submit
+    form.addEventListener('submit', function(e) {
+        // Check password match
+        const password = passwordInput.value;
+        const confirm = confirmPasswordInput.value;
+        
+        if (password !== confirm) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            confirmPasswordInput.focus();
+            return false;
+        }
+        
+        // Check terms
+        const terms = document.getElementById('agree_terms');
+        if (!terms.checked) {
+            e.preventDefault();
+            alert('Please agree to the Terms and Conditions.');
+            terms.focus();
+            return false;
+        }
+        
+        // Show loading state
+        registerBtn.disabled = true;
+        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+    });
+});
+</script>
 {% endblock %}
