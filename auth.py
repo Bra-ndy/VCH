@@ -98,20 +98,28 @@ def register():
     
     form = RegistrationForm()
     if form.validate_on_submit():
-        # Validate and format phone number (form already does this, but double-check)
+        # Validate and format phone number
         phone, error = validate_phone_number(form.phone.data)
         if error:
             flash(error, 'danger')
             return render_template('auth/register.html', form=form)
         
-        # Check if email already exists
-        if User.query.filter_by(email=form.email.data.lower()).first():
-            flash('Email already registered. Please use a different email or login.', 'danger')
+        # Check if email already exists (case insensitive)
+        existing_email = User.query.filter_by(email=form.email.data.lower()).first()
+        if existing_email:
+            flash('This email is already registered. Please use a different email or login.', 'danger')
+            return render_template('auth/register.html', form=form)
+        
+        # Check if username already exists
+        existing_username = User.query.filter_by(username=form.username.data).first()
+        if existing_username:
+            flash('Username already taken. Please choose a different username.', 'danger')
             return render_template('auth/register.html', form=form)
         
         # Check if phone already exists
-        if User.query.filter_by(phone=phone).first():
-            flash('Phone number already registered. Please use a different number.', 'danger')
+        existing_phone = User.query.filter_by(phone=phone).first()
+        if existing_phone:
+            flash('Phone number already registered. Please use a different phone number.', 'danger')
             return render_template('auth/register.html', form=form)
         
         # Create user
@@ -143,9 +151,7 @@ def register():
                     # Update referrer's agent level
                     referrer.update_agent_level()
                     
-                    # =============================================
                     # ADD BONUS TO REFERRER'S BALANCE
-                    # =============================================
                     bonus_amount = 100.0  # KSH 100 as referral bonus
                     
                     # Add to referrer's balance
