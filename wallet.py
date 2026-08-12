@@ -36,9 +36,9 @@ def deposit():
         Transaction.type == 'deposit'
     ).order_by(Transaction.created_at.desc()).limit(10).all()
     
-    # Get admin info from config
-    admin_name = current_app.config.get('ADMIN_NAME', 'WINNY LANGAT')
-    admin_number = current_app.config.get('ADMIN_MPESA_NUMBER', '0753796259')
+    # Get admin info from config - convert to string
+    admin_name = str(current_app.config.get('ADMIN_NAME', 'WINNY LANGAT'))
+    admin_number = str(current_app.config.get('ADMIN_MPESA_NUMBER', '0753796259'))
     
     # STK Push is disabled - Coming Soon
     # Redirect to manual deposit page if POST request
@@ -60,9 +60,9 @@ def deposit():
 def deposit_mpesa():
     """Deposit via M-Pesa - Admin verification required"""
     
-    # Get admin info from config
-    admin_name = current_app.config.get('ADMIN_NAME', 'WINNY LANGAT')
-    admin_number = current_app.config.get('ADMIN_MPESA_NUMBER', '0753796259')
+    # Get admin info from config - convert to string
+    admin_name = str(current_app.config.get('ADMIN_NAME', 'WINNY LANGAT'))
+    admin_number = str(current_app.config.get('ADMIN_MPESA_NUMBER', '0753796259'))
     
     # Get recent deposits
     recent_deposits = Transaction.query.filter(
