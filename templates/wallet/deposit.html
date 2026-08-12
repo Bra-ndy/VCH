@@ -45,7 +45,8 @@
                     <div class="text-center mb-3">
                         <div class="text-muted-custom small">Pay to:</div>
                         <div class="fw-bold gold">{{ admin_name or 'WINNY LANGAT' }}</div>
-                        <div class="display-6 gold" style="font-size: 2rem;">{{ admin_number or '0753796259' }}</div>
+                        <!-- Hardcode the admin number for now -->
+                        <div class="display-6 gold" style="font-size: 2rem;">0753796259</div>
                         <small class="text-muted-custom">Official VCH M-Pesa Number</small>
                     </div>
                     <a href="{{ url_for('wallet.deposit_mpesa') }}" class="btn-gold w-100 text-center" style="display: block; padding: 0.7rem;">
