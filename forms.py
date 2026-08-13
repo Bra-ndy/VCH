@@ -84,7 +84,10 @@ class RegistrationForm(FlaskForm):
         DataRequired(),
         EqualTo('password', message='Passwords must match')
     ])
-    referral_code = StringField('Referral Code', validators=[Optional(), Length(max=8)])
+    referral_code = StringField('Referral Code', validators=[
+        Optional(), 
+        Length(min=4, max=8, message='Referral code must be 4-8 characters')
+    ])
     agree_terms = BooleanField('I agree to the Terms and Conditions', validators=[DataRequired()])
     
     def validate_username(self, field):
@@ -96,10 +99,19 @@ class RegistrationForm(FlaskForm):
             raise ValidationError('Email already registered')
     
     def validate_referral_code(self, field):
+        """Validate referral code - only validate if provided, but don't block registration if invalid"""
         if field.data:
+            # Check if referral code exists
             referrer = User.query.filter_by(referral_code=field.data.upper()).first()
             if not referrer:
-                raise ValidationError('Invalid referral code')
+                # Just show a warning, but don't block registration
+                # This allows users to register even with an invalid code
+                # The warning will be shown to the user
+                field.data = ''  # Clear invalid code
+                raise ValidationError('Invalid referral code. You can still register without one.')
+            else:
+                # Valid code - keep it
+                field.data = field.data.upper()
 
 class ForgotPasswordForm(FlaskForm):
     email = EmailField('Email', validators=[DataRequired(), Email()])

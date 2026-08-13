@@ -98,6 +98,13 @@ def register():
     
     form = RegistrationForm()
     
+    # Get referral code from URL parameters (e.g., ?ref=OWNYOV38)
+    referral_code_from_url = request.args.get('ref', '').strip().upper()
+    
+    # If there's a referral code in URL and form hasn't been submitted, pre-populate the form
+    if referral_code_from_url and not form.is_submitted():
+        form.referral_code.data = referral_code_from_url
+    
     # Explicitly disable CSRF for this form
     form.csrf_enabled = False
     
@@ -106,25 +113,25 @@ def register():
         phone, error = validate_phone_number(form.phone.data)
         if error:
             flash(error, 'danger')
-            return render_template('auth/register.html', form=form)
+            return render_template('auth/register.html', form=form, referral_code=referral_code_from_url)
         
         # Check if email already exists (case insensitive)
         existing_email = User.query.filter_by(email=form.email.data.lower()).first()
         if existing_email:
             flash('This email is already registered. Please use a different email or login.', 'danger')
-            return render_template('auth/register.html', form=form)
+            return render_template('auth/register.html', form=form, referral_code=referral_code_from_url)
         
         # Check if username already exists
         existing_username = User.query.filter_by(username=form.username.data).first()
         if existing_username:
             flash('Username already taken. Please choose a different username.', 'danger')
-            return render_template('auth/register.html', form=form)
+            return render_template('auth/register.html', form=form, referral_code=referral_code_from_url)
         
         # Check if phone already exists
         existing_phone = User.query.filter_by(phone=phone).first()
         if existing_phone:
             flash('Phone number already registered. Please use a different phone number.', 'danger')
-            return render_template('auth/register.html', form=form)
+            return render_template('auth/register.html', form=form, referral_code=referral_code_from_url)
         
         # Create user
         user = User(
@@ -135,8 +142,8 @@ def register():
         )
         user.set_password(form.password.data)
         
-        # Store referral code for later use
-        referral_code_used = form.referral_code.data
+        # Use referral code from form or URL
+        referral_code_used = form.referral_code.data or referral_code_from_url
         
         # Generate verification token
         token = generate_verification_token(user.email)
@@ -147,15 +154,19 @@ def register():
             
             # Handle referral with bonus
             if referral_code_used:
+                # Find the referrer by their referral code
                 referrer = User.query.filter_by(referral_code=referral_code_used.upper()).first()
                 if referrer:
+                    # Link the new user to the referrer
                     user.referred_by = referrer.id
-                    # Update referrer's count
+                    
+                    # Update referrer's referral count
                     referrer.referral_count += 1
-                    # Update referrer's agent level
+                    
+                    # Update referrer's agent level based on new count
                     referrer.update_agent_level()
                     
-                    # ADD BONUS TO REFERRER'S BALANCE
+                    # Add referral bonus to referrer's balance
                     bonus_amount = 100.0  # KSH 100 as referral bonus
                     
                     # Add to referrer's balance
@@ -196,13 +207,24 @@ def register():
                     
                     db.session.add(referrer)
                     print(f"✅ Referral bonus: KSH {bonus_amount} added to {referrer.username}'s balance")
+                    
+                    # Flash success message for the new user
+                    flash(f'Welcome! You were referred by {referrer.username}. Enjoy your signup bonus!', 'success')
+                else:
+                    # Referral code not found
+                    flash('Referral code not found. You can still register without a referral.', 'warning')
+            
+            # Generate referral code for the new user if they don't have one
+            if not user.referral_code:
+                import secrets
+                user.referral_code = secrets.token_hex(4).upper()
             
             db.session.commit()
             
         except Exception as e:
             db.session.rollback()
             flash(f'Error creating account: {str(e)}', 'danger')
-            return render_template('auth/register.html', form=form)
+            return render_template('auth/register.html', form=form, referral_code=referral_code_from_url)
         
         # Send welcome email
         try:
@@ -239,7 +261,7 @@ def register():
                 field_name = field.replace('_', ' ').title()
                 flash(f'{field_name}: {error}', 'danger')
     
-    return render_template('auth/register.html', form=form)
+    return render_template('auth/register.html', form=form, referral_code=referral_code_from_url)
 
 @auth_bp.route('/logout')
 @login_required

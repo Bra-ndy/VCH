@@ -39,6 +39,51 @@
         font-size: 0.95rem;
     }
     
+    /* Referral Alert */
+    .referral-alert {
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 0.75rem;
+        padding: 1rem 1.2rem;
+        margin-bottom: 1.5rem;
+        display: none;
+        animation: slideDown 0.3s ease;
+    }
+    
+    .referral-alert.show {
+        display: block;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .referral-alert .title {
+        color: var(--gold);
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .referral-alert .title i {
+        font-size: 1.1rem;
+    }
+    
+    .referral-alert .message {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    
     /* Error Summary */
     .error-summary {
         background: rgba(220, 53, 69, 0.1);
@@ -52,17 +97,6 @@
     
     .error-summary.show {
         display: block;
-    }
-    
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
     }
     
     .error-summary .title {
@@ -225,6 +259,11 @@
         box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.15);
     }
     
+    .form-control.referral-applied {
+        border-color: var(--gold);
+        background: rgba(212, 175, 55, 0.05);
+    }
+    
     .field-error {
         color: #dc3545;
         font-size: 0.8rem;
@@ -250,6 +289,10 @@
         color: var(--text-muted);
         font-size: 0.75rem;
         margin-top: 0.3rem;
+    }
+    
+    .field-hint.gold-hint {
+        color: var(--gold);
     }
     
     /* Checkbox */
@@ -419,6 +462,21 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
+            
+            <!-- Referral Alert - Show if referral code is in URL -->
+            <div class="referral-alert {% if referral_code %}show{% endif %}">
+                <div class="title">
+                    <i class="fas fa-gift"></i>
+                    You've been referred! 🎉
+                </div>
+                <div class="message">
+                    {% if referral_code %}
+                        You were referred with code: <strong class="text-gold">{{ referral_code }}</strong>
+                    {% endif %}
+                    <br>
+                    <small>You'll receive a welcome bonus when you sign up!</small>
+                </div>
+            </div>
             
             <!-- Error Summary -->
             {% if form and form.errors %}
@@ -607,13 +665,15 @@
                         Referral Code <span style="color: var(--text-muted); font-weight: 400;">(Optional)</span>
                     </label>
                     <div class="input-wrapper">
-                        <span class="input-icon"><i class="fas fa-user-plus"></i></span>
+                        <span class="input-icon {% if referral_code %}gold{% endif %}">
+                            <i class="fas fa-user-plus"></i>
+                        </span>
                         <input type="text" 
                                name="referral_code" 
                                id="referral_code" 
-                               class="form-control {% if form and form.referral_code.errors %}error{% endif %}"
+                               class="form-control {% if referral_code %}referral-applied{% endif %}"
                                placeholder="Enter referral code from inviter" 
-                               value="{{ form.referral_code.data or '' }}">
+                               value="{{ referral_code or form.referral_code.data or '' }}">
                     </div>
                     <div class="field-error {% if form and form.referral_code.errors %}show{% endif %}">
                         <i class="fas fa-exclamation-circle field-error-icon"></i>
@@ -621,9 +681,13 @@
                             {{ form.referral_code.errors[0] }}
                         {% endif %}
                     </div>
-                    <div class="field-hint">
-                        <i class="fas fa-info-circle"></i>
-                        If you were invited by someone, enter their referral code
+                    <div class="field-hint {% if referral_code %}gold-hint{% endif %}">
+                        <i class="fas fa-{{ 'check-circle' if referral_code else 'info-circle' }}"></i>
+                        {% if referral_code %}
+                            Referral code <strong class="text-gold">{{ referral_code }}</strong> has been applied! 🎉
+                        {% else %}
+                            If you were invited by someone, enter their referral code
+                        {% endif %}
                     </div>
                 </div>
                 
