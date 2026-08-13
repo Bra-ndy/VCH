@@ -152,7 +152,7 @@ def register():
             db.session.add(user)
             db.session.flush()  # This assigns an ID to user without committing
             
-            # Handle referral with bonus
+            # Handle referral - ONLY LINK THE USER, NO BONUS YET
             if referral_code_used:
                 # Find the referrer by their referral code
                 referrer = User.query.filter_by(referral_code=referral_code_used.upper()).first()
@@ -166,50 +166,20 @@ def register():
                     # Update referrer's agent level based on new count
                     referrer.update_agent_level()
                     
-                    # Add referral bonus to referrer's balance
-                    bonus_amount = 100.0  # KSH 100 as referral bonus
-                    
-                    # Add to referrer's balance
-                    referrer.balance += bonus_amount
-                    referrer.total_earned += bonus_amount
-                    
-                    # Create referral bonus record
-                    referral_bonus = ReferralBonus(
-                        referrer_id=referrer.id,
-                        referred_id=user.id,
-                        amount=bonus_amount,
-                        type='signup_bonus',
-                        is_paid=True,
-                        paid_at=datetime.utcnow()
-                    )
-                    db.session.add(referral_bonus)
-                    
-                    # Create transaction record for the bonus
-                    transaction = Transaction(
-                        user_id=referrer.id,
-                        type='referral_bonus',
-                        amount=bonus_amount,
-                        fee=0,
-                        net_amount=bonus_amount,
-                        description=f'Referral bonus for {user.username}',
-                        status='completed'
-                    )
-                    db.session.add(transaction)
-                    
                     # Create notification for referrer
                     notification = Notification(
                         user_id=referrer.id,
-                        title='Referral Bonus Earned! 🎉',
-                        message=f'You earned KSH {bonus_amount:,.2f} for referring {user.username}!',
-                        type='success'
+                        title='New Referral! 👤',
+                        message=f'{user.username} has joined using your referral link! They will earn you a bonus when they rent their first car.',
+                        type='info'
                     )
                     db.session.add(notification)
                     
                     db.session.add(referrer)
-                    print(f"✅ Referral bonus: KSH {bonus_amount} added to {referrer.username}'s balance")
+                    print(f"✅ User {user.username} linked to referrer {referrer.username}")
                     
-                    # Flash success message for the new user
-                    flash(f'Welcome! You were referred by {referrer.username}. Enjoy your signup bonus!', 'success')
+                    # Flash message for the new user
+                    flash(f'Welcome! You were referred by {referrer.username}. You\'ll both earn a bonus when you rent your first car!', 'success')
                 else:
                     # Referral code not found
                     flash('Referral code not found. You can still register without a referral.', 'warning')

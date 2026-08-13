@@ -39,6 +39,7 @@ class User(UserMixin, db.Model):
     referral_code = db.Column(db.String(8), unique=True, nullable=False)
     referred_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     referral_count = db.Column(db.Integer, default=0)
+    referral_bonus_applied = db.Column(db.Boolean, default=False)  # Added: track if bonus already given
     
     # Agent Level
     agent_level = db.Column(db.String(20), default='none')  # none, junior, level1, level2
@@ -205,7 +206,7 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
     # Transaction details
-    type = db.Column(db.String(20), nullable=False)  # deposit, withdrawal, rental_earning, service_earning, referral_bonus, agent_salary
+    type = db.Column(db.String(20), nullable=False)  # deposit, withdrawal, rental_earning, service_earning, referral_bonus, agent_salary, welcome_bonus
     amount = db.Column(db.Float, nullable=False)
     fee = db.Column(db.Float, default=0.0)
     net_amount = db.Column(db.Float, nullable=False)
@@ -243,7 +244,7 @@ class ServiceHistory(db.Model):
     
     # Service details
     type = db.Column(db.String(20), default='daily_servicing')  # daily_servicing
-    earning = db.Column(db.Float, default=50.0)
+    earning = db.Column(db.Float, default=5.0)  # Changed from 50.0 to 5.0
     
     # Dates
     service_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -253,6 +254,9 @@ class ServiceHistory(db.Model):
         super().__init__(*args, **kwargs)
         if not self.service_id:
             self.service_id = generate_id('SRV', 10)
+        # Set default earning to 5.0 if not provided
+        if not self.earning or self.earning == 50.0:
+            self.earning = 5.0
     
     def __repr__(self):
         return f'<Service {self.service_id}>'
@@ -268,7 +272,7 @@ class ReferralBonus(db.Model):
     
     # Bonus details
     amount = db.Column(db.Float, nullable=False)
-    type = db.Column(db.String(20), default='signup_bonus')  # signup_bonus, commission
+    type = db.Column(db.String(20), default='rental_bonus')  # Changed from 'signup_bonus' to 'rental_bonus'
     
     # Status
     is_paid = db.Column(db.Boolean, default=False)
