@@ -3,177 +3,506 @@
 {% block title %}Wallet - {{ app_name or 'VCH' }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h2><i class="fas fa-wallet gold"></i> My Wallet</h2>
-    <p class="text-muted-custom">Manage your funds and transactions</p>
-    
+<div class="container-fluid py-4">
+    <!-- Welcome Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">My Wallet</h2>
+            <p class="text-muted-custom mb-0">Manage your funds, track transactions and monitor your earnings</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('wallet.deposit') }}" class="btn-gold">
+                <i class="fas fa-plus-circle me-1"></i> Deposit
+            </a>
+            <a href="{{ url_for('wallet.withdraw') }}" class="btn-outline-gold">
+                <i class="fas fa-arrow-up-right-from-square me-1"></i> Withdraw
+            </a>
+        </div>
+    </div>
+
     <!-- Pending Withdrawal Alert -->
     {% if pending_withdrawals and pending_withdrawals > 0 %}
-    <div class="alert alert-warning mb-4">
-        <i class="fas fa-clock"></i>
-        You have <strong>{{ pending_withdrawals }}</strong> pending withdrawal request(s). 
-        Admin will process them shortly.
+    <div class="alert alert-warning d-flex align-items-center gap-3 mb-4" style="border-left: 4px solid #d4af37;">
+        <i class="fas fa-clock fa-lg"></i>
+        <div>
+            <strong>{{ pending_withdrawals }}</strong> pending withdrawal request(s) awaiting admin approval.
+            <span class="text-muted-custom small">(Typically processed within 1-24 hours)</span>
+        </div>
     </div>
     {% endif %}
-    
-    <!-- Balance Summary -->
+
+    <!-- Statistics Grid -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="number">KSH {{ "%.2f"|format(current_user.balance or 0) }}</div>
-                <div class="label">Available Balance</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="number">KSH {{ "%.2f"|format(current_user.total_deposited or 0) }}</div>
-                <div class="label">Total Deposited</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="number">KSH {{ "%.2f"|format(current_user.total_withdrawn or 0) }}</div>
-                <div class="label">Total Withdrawn</div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Quick Actions -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <a href="{{ url_for('wallet.deposit') }}" class="btn-gold w-100 text-center" style="padding: 1rem;">
-                <i class="fas fa-plus-circle"></i> Deposit Funds
-            </a>
-        </div>
-        <div class="col-md-6">
-            <a href="{{ url_for('wallet.withdraw') }}" class="btn-outline-gold w-100 text-center" style="padding: 1rem;">
-                <i class="fas fa-arrow-up-right"></i> Withdraw Funds
-            </a>
-        </div>
-    </div>
-    
-    <!-- Quick Links -->
-    <div class="row g-3">
-        <div class="col-md-3">
-            <a href="{{ url_for('wallet.transactions') }}" class="quick-action">
-                <i class="fas fa-history"></i>
-                <span>Transactions</span>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="{{ url_for('wallet.earnings') }}" class="quick-action">
-                <i class="fas fa-chart-line"></i>
-                <span>Earnings</span>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="{{ url_for('wallet.statements') }}" class="quick-action">
-                <i class="fas fa-file-invoice"></i>
-                <span>Statements</span>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="#" class="quick-action">
-                <i class="fas fa-gift"></i>
-                <span>CDK Exchange</span>
-            </a>
-        </div>
-    </div>
-    
-    <!-- Recent Transactions Preview -->
-    <div class="card-dark mt-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5><i class="fas fa-history gold"></i> Recent Activity</h5>
-            <a href="{{ url_for('wallet.transactions') }}" class="text-gold">View All →</a>
-        </div>
-        {% if recent_transactions %}
-            <div class="list-group list-group-flush">
-                {% for txn in recent_transactions[:5] %}
-                <div class="list-group-item bg-transparent text-white border-secondary">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="badge bg-{{ 'success' if txn.type == 'deposit' else 'warning' if txn.type == 'withdrawal' else 'info' }}">
-                                {{ txn.type|replace('_', ' ')|title }}
-                            </span>
-                            <span class="text-muted-custom small ms-2">{{ txn.description or '' }}</span>
-                        </div>
-                        <div>
-                            <span class="text-{{ 'success' if txn.amount > 0 else 'danger' }}">
-                                {{ '+' if txn.amount > 0 else '' }}KSH {{ "%.2f"|format(txn.amount) }}
-                            </span>
-                            <span class="text-muted-custom small ms-2">{{ txn.created_at.strftime('%d/%m/%Y') }}</span>
-                        </div>
-                    </div>
+        <!-- Available Balance -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card stat-card-gold">
+                <div class="stat-header">
+                    <span class="stat-label">Available Balance</span>
+                    <i class="fas fa-wallet stat-icon"></i>
                 </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-center text-muted-custom mb-0">No recent transactions</p>
-        {% endif %}
-    </div>
-    
-    <!-- Withdrawal Status Info - Improved Design -->
-    <div class="card-dark mt-4">
-        <div class="d-flex align-items-center mb-3">
-            <i class="fas fa-info-circle gold me-2"></i>
-            <h5 class="mb-0">Withdrawal Information</h5>
-        </div>
-        
-        <div class="row g-3">
-            <!-- Status Legend -->
-            <div class="col-md-6">
-                <div class="p-3" style="background: #1a1a1a; border-radius: 0.75rem; border: 1px solid #2a2a2a;">
-                    <h6 class="mb-2" style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <i class="fas fa-circle gold me-1" style="font-size: 0.5rem;"></i> Status Guide
-                    </h6>
-                    <div class="d-flex flex-wrap gap-3">
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-warning me-2" style="width: 12px; height: 12px; padding: 0; border-radius: 50%;"></span>
-                            <span style="font-size: 0.85rem;">Pending</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-success me-2" style="width: 12px; height: 12px; padding: 0; border-radius: 50%;"></span>
-                            <span style="font-size: 0.85rem;">Approved</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-danger me-2" style="width: 12px; height: 12px; padding: 0; border-radius: 50%;"></span>
-                            <span style="font-size: 0.85rem;">Rejected</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Processing Info -->
-            <div class="col-md-6">
-                <div class="p-3" style="background: #1a1a1a; border-radius: 0.75rem; border: 1px solid #2a2a2a;">
-                    <h6 class="mb-2" style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <i class="fas fa-clock gold me-1"></i> Processing Info
-                    </h6>
-                    <div class="d-flex flex-wrap gap-3">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-clock text-muted-custom me-1" style="font-size: 0.75rem;"></i>
-                            <span style="font-size: 0.85rem;">1-24 hours</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-phone text-muted-custom me-1" style="font-size: 0.75rem;"></i>
-                            <span style="font-size: 0.85rem;">
-                                <a href="mailto:support@vch.com" class="text-gold">Contact Support</a>
-                            </span>
-                        </div>
-                    </div>
+                <div class="stat-value">KSH {{ "%.2f"|format(current_user.balance or 0) }}</div>
+                <div class="stat-footer">
+                    <span class="text-muted-custom"><i class="fas fa-circle text-success" style="font-size: 0.5rem;"></i> Ready to use</span>
                 </div>
             </div>
         </div>
         
-        <!-- Additional Info -->
-        <div class="mt-3 p-3" style="background: rgba(212, 175, 55, 0.05); border-radius: 0.75rem; border: 1px solid rgba(212, 175, 55, 0.1);">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-shield-alt gold me-2"></i>
-                <span style="font-size: 0.85rem; color: var(--text-muted);">
-                    All withdrawals are processed securely by our admin team. You will receive a notification once your request is processed.
-                </span>
+        <!-- Total Deposited -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Total Deposited</span>
+                    <i class="fas fa-arrow-down stat-icon text-success"></i>
+                </div>
+                <div class="stat-value">KSH {{ "%.2f"|format(current_user.total_deposited or 0) }}</div>
+                <div class="stat-footer">
+                    <span class="text-muted-custom"><i class="fas fa-check-circle text-success"></i> Lifetime deposits</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Withdrawn -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Total Withdrawn</span>
+                    <i class="fas fa-arrow-up stat-icon text-danger"></i>
+                </div>
+                <div class="stat-value">KSH {{ "%.2f"|format(current_user.total_withdrawn or 0) }}</div>
+                <div class="stat-footer">
+                    <span class="text-muted-custom"><i class="fas fa-history"></i> Lifetime withdrawals</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pending Withdrawals -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Pending Withdrawals</span>
+                    <i class="fas fa-clock stat-icon text-warning"></i>
+                </div>
+                <div class="stat-value">{{ pending_withdrawals or 0 }}</div>
+                <div class="stat-footer">
+                    <span class="text-muted-custom"><i class="fas fa-hourglass-half"></i> Awaiting processing</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="mini-stat">
+                <span class="mini-stat-value">{{ transactions_count or 0 }}</span>
+                <span class="mini-stat-label">Transactions</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="mini-stat">
+                <span class="mini-stat-value">{{ deposits_count or 0 }}</span>
+                <span class="mini-stat-label">Deposits</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="mini-stat">
+                <span class="mini-stat-value">{{ withdrawals_count or 0 }}</span>
+                <span class="mini-stat-label">Withdrawals</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="mini-stat">
+                <span class="mini-stat-value">{{ earnings_count or 0 }}</span>
+                <span class="mini-stat-label">Earnings</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs-custom mb-4" id="walletTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions" type="button" role="tab">
+                <i class="fas fa-clock-rotate-left me-1"></i> Recent Activity
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="earnings-tab" data-bs-toggle="tab" data-bs-target="#earnings" type="button" role="tab">
+                <i class="fas fa-chart-simple me-1"></i> Earnings
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="statements-tab" data-bs-toggle="tab" data-bs-target="#statements" type="button" role="tab">
+                <i class="fas fa-file-invoice me-1"></i> Statements
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="exchange-tab" data-bs-toggle="tab" data-bs-target="#exchange" type="button" role="tab">
+                <i class="fas fa-arrows-spin me-1"></i> CDK Exchange
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="walletTabsContent">
+        <!-- Transactions Tab -->
+        <div class="tab-pane fade show active" id="transactions" role="tabpanel">
+            <div class="card-dark">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-list-ul gold me-2"></i>Recent Transactions</h5>
+                    <a href="{{ url_for('wallet.transactions') }}" class="text-gold">View All →</a>
+                </div>
+                
+                {% if recent_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for txn in recent_transactions[:5] %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if txn.type == 'deposit' else 'warning' if txn.type == 'withdrawal' else 'info' }}">
+                                        {{ txn.type|replace('_', ' ')|title }}
+                                    </span>
+                                </td>
+                                <td>{{ txn.description or '—' }}</td>
+                                <td class="text-{{ 'success' if txn.amount > 0 else 'danger' }}">
+                                    {{ '+' if txn.amount > 0 else '' }}KSH {{ "%.2f"|format(txn.amount) }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if txn.status == 'completed' else 'warning' if txn.status == 'pending' else 'danger' }}">
+                                        {{ txn.status|title }}
+                                    </span>
+                                </td>
+                                <td class="text-muted-custom">{{ txn.created_at.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox" style="font-size: 2rem; color: var(--text-muted); opacity: 0.3;"></i>
+                    <p class="text-muted-custom mt-2 mb-0">No transactions yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Earnings Tab -->
+        <div class="tab-pane fade" id="earnings" role="tabpanel">
+            <div class="card-dark">
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-line" style="font-size: 2.5rem; color: var(--gold); opacity: 0.5;"></i>
+                    <h5 class="mt-3">Earnings Overview</h5>
+                    <p class="text-muted-custom">Total Earnings: <strong class="text-gold">KSH {{ "%.2f"|format(current_user.total_earnings or 0) }}</strong></p>
+                    <a href="{{ url_for('wallet.earnings') }}" class="btn-gold btn-sm">View Full Report</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statements Tab -->
+        <div class="tab-pane fade" id="statements" role="tabpanel">
+            <div class="card-dark">
+                <div class="text-center py-4">
+                    <i class="fas fa-file-pdf" style="font-size: 2.5rem; color: var(--gold); opacity: 0.5;"></i>
+                    <h5 class="mt-3">Account Statements</h5>
+                    <p class="text-muted-custom">Download your monthly statements</p>
+                    <a href="{{ url_for('wallet.statements') }}" class="btn-gold btn-sm">Generate Statement</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- CDK Exchange Tab -->
+        <div class="tab-pane fade" id="exchange" role="tabpanel">
+            <div class="card-dark">
+                <div class="text-center py-4">
+                    <i class="fas fa-arrows-spin" style="font-size: 2.5rem; color: var(--gold); opacity: 0.5;"></i>
+                    <h5 class="mt-3">CDK Exchange</h5>
+                    <p class="text-muted-custom">Convert your funds to CDK tokens</p>
+                    <button class="btn-gold btn-sm" disabled>Coming Soon</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdrawal Information Footer -->
+    <div class="row g-3 mt-3">
+        <div class="col-md-6">
+            <div class="info-card">
+                <h6 class="info-card-title"><i class="fas fa-circle-info gold me-2"></i>Status Guide</h6>
+                <div class="d-flex gap-3 flex-wrap">
+                    <span class="status-badge"><span class="status-dot bg-warning"></span> Pending</span>
+                    <span class="status-badge"><span class="status-dot bg-success"></span> Approved</span>
+                    <span class="status-badge"><span class="status-dot bg-danger"></span> Rejected</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="info-card">
+                <h6 class="info-card-title"><i class="fas fa-clock gold me-2"></i>Processing Time</h6>
+                <p class="mb-0 text-muted-custom small">
+                    <i class="fas fa-hourglass-half me-1"></i> 1-24 hours 
+                    <span class="mx-2">|</span>
+                    <i class="fas fa-headset me-1"></i> 
+                    <a href="mailto:support@vch.com" class="text-gold">Contact Support</a>
+                </p>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    :root {
+        --gold: #d4af37;
+        --gold-light: #f5e56b;
+        --bg-dark: #0d0d0d;
+        --card-bg: rgba(255, 255, 255, 0.03);
+        --text-muted: #8a8a8a;
+    }
+
+    /* Statistics Cards */
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 1rem;
+        padding: 1.25rem 1.5rem;
+        transition: all 0.3s ease;
+        height: 100%;
+        backdrop-filter: blur(8px);
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+    .stat-card-gold {
+        background: linear-gradient(145deg, rgba(212, 175, 55, 0.08), rgba(212, 175, 55, 0.02));
+        border-color: rgba(212, 175, 55, 0.15);
+    }
+    .stat-card-gold:hover {
+        border-color: rgba(212, 175, 55, 0.3);
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.1);
+    }
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    .stat-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .stat-icon {
+        font-size: 1.25rem;
+        opacity: 0.6;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0.25rem 0;
+        letter-spacing: -0.5px;
+    }
+    .stat-footer {
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 0.5rem;
+    }
+
+    /* Mini Stats */
+    .mini-stat {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        text-align: center;
+        transition: 0.3s;
+    }
+    .mini-stat:hover {
+        background: rgba(255, 255, 255, 0.05);
+        transform: scale(1.02);
+    }
+    .mini-stat-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gold);
+    }
+    .mini-stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Custom Tabs */
+    .nav-tabs-custom {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .nav-tabs-custom .nav-link {
+        color: var(--text-muted);
+        border: none;
+        padding: 0.6rem 1.25rem;
+        border-radius: 0.5rem;
+        background: transparent;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    .nav-tabs-custom .nav-link:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.05);
+    }
+    .nav-tabs-custom .nav-link.active {
+        color: var(--gold);
+        background: rgba(212, 175, 55, 0.08);
+        border: 1px solid rgba(212, 175, 55, 0.15);
+    }
+
+    /* Cards */
+    .card-dark {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        backdrop-filter: blur(8px);
+    }
+
+    /* Info Cards */
+    .info-card {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        height: 100%;
+    }
+    .info-card-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    /* Buttons */
+    .btn-gold {
+        background: linear-gradient(135deg, #d4af37, #b8962e);
+        color: #0d0d0d;
+        border: none;
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .btn-gold:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        color: #0d0d0d;
+    }
+    .btn-gold.btn-sm {
+        padding: 0.35rem 1rem;
+        font-size: 0.85rem;
+    }
+    .btn-outline-gold {
+        background: transparent;
+        color: var(--gold);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .btn-outline-gold:hover {
+        background: rgba(212, 175, 55, 0.1);
+        border-color: var(--gold);
+        color: var(--gold);
+    }
+
+    /* Table Styles */
+    .table-dark {
+        --bs-table-bg: transparent;
+        --bs-table-border-color: rgba(255, 255, 255, 0.05);
+        margin-bottom: 0;
+    }
+    .table-dark thead th {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 500;
+        padding: 0.75rem 0.5rem;
+    }
+    .table-dark tbody td {
+        padding: 0.75rem 0.5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .table-dark tbody tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .text-gold {
+        color: var(--gold) !important;
+    }
+    .text-gold:hover {
+        color: var(--gold-light) !important;
+    }
+    .gold {
+        color: var(--gold);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stat-value {
+            font-size: 1.5rem;
+        }
+        .stat-card {
+            padding: 1rem;
+        }
+        .mini-stat-value {
+            font-size: 1.2rem;
+        }
+        .nav-tabs-custom .nav-link {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+        }
+    }
+</style>
 {% endblock %}
