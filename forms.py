@@ -61,6 +61,10 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('Remember Me')
 
 class RegistrationForm(FlaskForm):
+    # Disable CSRF for registration form to avoid token errors
+    class Meta:
+        csrf = False
+    
     username = StringField('Username', validators=[
         DataRequired(),
         Length(min=3, max=80),

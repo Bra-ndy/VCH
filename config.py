@@ -131,6 +131,10 @@ class DevelopmentConfig(Config):
     ADMIN_MPESA_NUMBER_API = str(os.getenv('ADMIN_MPESA_NUMBER_API', '254753796259'))
     DEPOSIT_VERIFICATION_REQUIRED = True
     
+    # CSRF Configuration - Disabled for development
+    WTF_CSRF_ENABLED = False
+    WTF_CSRF_SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
+    
     # For local testing with ngrok, override callback URL
     @property
     def MPESA_CALLBACK_URL(self):
@@ -157,6 +161,10 @@ class ProductionConfig(Config):
     ADMIN_MPESA_NUMBER = str(os.getenv('ADMIN_MPESA_NUMBER', '0753796259'))
     ADMIN_MPESA_NUMBER_API = str(os.getenv('ADMIN_MPESA_NUMBER_API', '254753796259'))
     DEPOSIT_VERIFICATION_REQUIRED = True
+    
+    # CSRF Configuration - Enabled for production
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_SECRET_KEY = os.getenv('SECRET_KEY')
     
     # Validate admin number is set in production
     @property

@@ -97,6 +97,10 @@ def register():
         return redirect(url_for('dashboard'))
     
     form = RegistrationForm()
+    
+    # Explicitly disable CSRF for this form
+    form.csrf_enabled = False
+    
     if form.validate_on_submit():
         # Validate and format phone number
         phone, error = validate_phone_number(form.phone.data)
