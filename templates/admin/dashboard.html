@@ -2,158 +2,449 @@
 
 {% block title %}Admin Dashboard - {{ app_name or 'VCH' }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Admin Dashboard Specific Styles */
+    .admin-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .admin-stat-card {
+        background: #141414;
+        border: 1px solid #2a2a2a;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .admin-stat-card:hover {
+        border-color: #d4af37;
+        transform: translateY(-4px);
+        box-shadow: 0 4px 20px rgba(212, 175, 55, 0.1);
+    }
+    
+    .admin-stat-card .stat-icon {
+        font-size: 1.8rem;
+        color: #d4af37;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .admin-stat-card .stat-number {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1.2;
+    }
+    
+    .admin-stat-card .stat-number.gold {
+        color: #d4af37;
+    }
+    
+    .admin-stat-card .stat-number.success {
+        color: #28a745;
+    }
+    
+    .admin-stat-card .stat-number.danger {
+        color: #dc3545;
+    }
+    
+    .admin-stat-card .stat-label {
+        color: #9a9a9a;
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+    }
+    
+    .admin-stat-card .stat-badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        font-size: 0.6rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 1rem;
+        background: rgba(212, 175, 55, 0.15);
+        color: #d4af37;
+    }
+    
+    .admin-stat-card .stat-trend {
+        display: inline-block;
+        font-size: 0.7rem;
+        margin-top: 0.3rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 1rem;
+        background: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+    }
+    
+    .admin-stat-card .stat-trend.down {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
+    
+    /* Admin Quick Actions */
+    .admin-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .admin-action-btn {
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 0.75rem;
+        padding: 1.2rem 0.8rem;
+        text-align: center;
+        color: #ffffff;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: block;
+    }
+    
+    .admin-action-btn:hover {
+        border-color: #d4af37;
+        transform: translateY(-2px);
+        color: #ffffff;
+        text-decoration: none;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1);
+    }
+    
+    .admin-action-btn i {
+        font-size: 1.8rem;
+        color: #d4af37;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .admin-action-btn span {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .admin-action-btn .badge-count {
+        display: inline-block;
+        background: #dc3545;
+        color: #ffffff;
+        font-size: 0.65rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 1rem;
+        margin-left: 0.3rem;
+    }
+    
+    /* Table Styles */
+    .admin-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+    
+    .admin-table th {
+        background: #1a1a1a;
+        color: #d4af37;
+        padding: 0.8rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border-bottom: 2px solid #2a2a2a;
+        white-space: nowrap;
+    }
+    
+    .admin-table td {
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid #2a2a2a;
+        color: #ffffff;
+        font-size: 0.9rem;
+    }
+    
+    .admin-table tr:hover td {
+        background: #1a1a1a;
+    }
+    
+    .admin-table .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .admin-table .user-cell .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #2a2a2a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        color: #d4af37;
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+        .admin-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .admin-actions-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .admin-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        .admin-stat-card {
+            padding: 1rem;
+        }
+        .admin-stat-card .stat-number {
+            font-size: 1.6rem;
+        }
+        .admin-actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .admin-action-btn {
+            padding: 0.8rem 0.5rem;
+        }
+        .admin-action-btn i {
+            font-size: 1.4rem;
+        }
+        .admin-table th,
+        .admin-table td {
+            padding: 0.5rem 0.6rem;
+            font-size: 0.8rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .admin-stats-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+        .admin-stat-card .stat-number {
+            font-size: 1.3rem;
+        }
+        .admin-stat-card .stat-label {
+            font-size: 0.7rem;
+        }
+        .admin-actions-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+        .admin-action-btn {
+            padding: 0.6rem 0.3rem;
+        }
+        .admin-action-btn i {
+            font-size: 1.2rem;
+        }
+        .admin-action-btn span {
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-tachometer-alt gold"></i> Admin Dashboard</h2>
-        <span class="badge bg-gold">Admin Panel</span>
-    </div>
-    <p class="text-muted-custom">Welcome to the admin panel. Manage users, vehicles, transactions and more.</p>
-    
-    <!-- Stats -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="number">{{ total_users|default(0) }}</div>
-                <div class="label">Total Users</div>
-            </div>
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-tachometer-alt gold"></i> Admin Dashboard</h2>
+            <p class="text-muted-custom">Welcome to the admin panel. Manage users, vehicles, transactions and more.</p>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="number">{{ active_users|default(0) }}</div>
-                <div class="label">Active Users</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="number">{{ total_rentals|default(0) }}</div>
-                <div class="label">Total Rentals</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="number">{{ active_rentals|default(0) }}</div>
-                <div class="label">Active Rentals</div>
-            </div>
+        <div>
+            <span class="badge bg-gold">Admin Panel</span>
         </div>
     </div>
     
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="number">KSH {{ "%.2f"|format(total_deposits|default(0)) }}</div>
-                <div class="label">Total Deposits</div>
-            </div>
+    <!-- Stats Grid -->
+    <div class="admin-stats-grid">
+        <div class="admin-stat-card">
+            <span class="stat-icon"><i class="fas fa-users"></i></span>
+            <div class="stat-number">{{ total_users|default(0) }}</div>
+            <div class="stat-label">Total Users</div>
+            <span class="stat-badge">Active: {{ active_users|default(0) }}</span>
         </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="number">KSH {{ "%.2f"|format(total_withdrawals|default(0)) }}</div>
-                <div class="label">Total Withdrawals</div>
-            </div>
+        
+        <div class="admin-stat-card">
+            <span class="stat-icon"><i class="fas fa-user-check"></i></span>
+            <div class="stat-number gold">{{ active_users|default(0) }}</div>
+            <div class="stat-label">Active Users</div>
+            <span class="stat-badge">Verified: {{ verified_users|default(0) }}</span>
         </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="number">KSH {{ "%.2f"|format(total_revenue|default(0)) }}</div>
-                <div class="label">Total Revenue</div>
-            </div>
+        
+        <div class="admin-stat-card">
+            <span class="stat-icon"><i class="fas fa-car"></i></span>
+            <div class="stat-number">{{ total_vehicles|default(0) }}</div>
+            <div class="stat-label">Total Vehicles</div>
+            <span class="stat-badge">Active: {{ total_vehicles|default(0) }}</span>
+        </div>
+        
+        <div class="admin-stat-card">
+            <span class="stat-icon"><i class="fas fa-calendar-check"></i></span>
+            <div class="stat-number">{{ total_rentals|default(0) }}</div>
+            <div class="stat-label">Total Rentals</div>
+            <span class="stat-badge">Active: {{ active_rentals|default(0) }}</span>
+        </div>
+        
+        <div class="admin-stat-card">
+            <span class="stat-icon"><i class="fas fa-money-bill-wave"></i></span>
+            <div class="stat-number gold">KSH {{ "%.2f"|format(total_deposits|default(0)) }}</div>
+            <div class="stat-label">Total Deposits</div>
+            <span class="stat-badge">Revenue</span>
+        </div>
+        
+        <div class="admin-stat-card">
+            <span class="stat-icon"><i class="fas fa-arrow-up-right"></i></span>
+            <div class="stat-number danger">KSH {{ "%.2f"|format(total_withdrawals|default(0)) }}</div>
+            <div class="stat-label">Total Withdrawals</div>
+            <span class="stat-badge">Pending: {{ pending_withdrawals|default(0) }}</span>
         </div>
     </div>
     
     <!-- Quick Actions -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <a href="{{ url_for('admin.users') }}" class="quick-action">
-                <i class="fas fa-users"></i>
-                <span>Manage Users</span>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="{{ url_for('admin.vehicles') }}" class="quick-action">
-                <i class="fas fa-car"></i>
-                <span>Manage Vehicles</span>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="{{ url_for('admin.rentals') }}" class="quick-action">
-                <i class="fas fa-calendar-check"></i>
-                <span>Manage Rentals</span>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="{{ url_for('admin.withdrawals') }}" class="quick-action">
-                <i class="fas fa-money-bill-wave"></i>
-                <span>Withdrawals</span>
-            </a>
-        </div>
+    <div class="admin-actions-grid">
+        <a href="{{ url_for('admin.users') }}" class="admin-action-btn">
+            <i class="fas fa-users"></i>
+            <span>Users</span>
+            <span class="badge-count">{{ total_users|default(0) }}</span>
+        </a>
+        <a href="{{ url_for('admin.vehicles') }}" class="admin-action-btn">
+            <i class="fas fa-car"></i>
+            <span>Vehicles</span>
+            <span class="badge-count">{{ total_vehicles|default(0) }}</span>
+        </a>
+        <a href="{{ url_for('admin.rentals') }}" class="admin-action-btn">
+            <i class="fas fa-calendar-check"></i>
+            <span>Rentals</span>
+            <span class="badge-count">{{ total_rentals|default(0) }}</span>
+        </a>
+        <a href="{{ url_for('admin.withdrawals') }}" class="admin-action-btn">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Withdrawals</span>
+            <span class="badge-count">{{ pending_withdrawals|default(0) }}</span>
+        </a>
+        <a href="{{ url_for('admin.deposits') }}" class="admin-action-btn">
+            <i class="fas fa-plus-circle"></i>
+            <span>Deposits</span>
+        </a>
+        <a href="{{ url_for('admin.referrals') }}" class="admin-action-btn">
+            <i class="fas fa-user-plus"></i>
+            <span>Referrals</span>
+        </a>
+        <a href="{{ url_for('admin.announcements') }}" class="admin-action-btn">
+            <i class="fas fa-bullhorn"></i>
+            <span>Announce</span>
+        </a>
+        <a href="{{ url_for('admin.settings') }}" class="admin-action-btn">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
     </div>
     
-    <!-- Recent Users -->
-    <div class="card-dark mb-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5><i class="fas fa-user-plus gold"></i> Recent Users</h5>
-            <a href="{{ url_for('admin.users') }}" class="text-gold">View All →</a>
+    <!-- Recent Users & Transactions -->
+    <div class="row g-4">
+        <!-- Recent Users -->
+        <div class="col-lg-6">
+            <div class="card-dark">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-user-plus gold"></i> Recent Users</h5>
+                    <a href="{{ url_for('admin.users') }}" class="text-gold">View All →</a>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Joined</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="avatar">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        {{ user.username }}
+                                    </div>
+                                </td>
+                                <td>{{ user.email[:20] }}{% if user.email|length > 20 %}...{% endif %}</td>
+                                <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                                        {{ 'Active' if user.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted-custom">No users yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-dark table-hover">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Balance</th>
-                        <th>Joined</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in recent_users %}
-                    <tr>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.phone or 'N/A' }}</td>
-                        <td>KSH {{ "%.2f"|format(user.balance or 0) }}</td>
-                        <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    
-    <!-- Recent Transactions -->
-    <div class="card-dark">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5><i class="fas fa-history gold"></i> Recent Transactions</h5>
-            <a href="{{ url_for('admin.deposits') }}" class="text-gold">View All →</a>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-dark table-hover">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Type</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for txn in recent_transactions %}
-                    <tr>
-                        <td>{{ txn.user.username }}</td>
-                        <td>{{ txn.type|replace('_', ' ')|title }}</td>
-                        <td class="{% if txn.amount > 0 %}text-success{% else %}text-danger{% endif %}">
-                            KSH {{ "%.2f"|format(txn.amount) }}
-                        </td>
-                        <td>
-                            <span class="badge bg-{{ 'success' if txn.status == 'completed' else 'warning' if txn.status == 'pending' else 'danger' }}">
-                                {{ txn.status|title }}
-                            </span>
-                        </td>
-                        <td>{{ txn.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        
+        <!-- Recent Transactions -->
+        <div class="col-lg-6">
+            <div class="card-dark">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-history gold"></i> Recent Transactions</h5>
+                    <a href="{{ url_for('admin.deposits') }}" class="text-gold">View All →</a>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for txn in recent_transactions %}
+                            <tr>
+                                <td>{{ txn.user.username }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if txn.type == 'deposit' else 'warning' if txn.type == 'withdrawal' else 'info' }}">
+                                        {{ txn.type|replace('_', ' ')|title }}
+                                    </span>
+                                </td>
+                                <td class="{% if txn.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    KSH {{ "%.2f"|format(txn.amount) }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if txn.status == 'completed' else 'warning' if txn.status == 'pending' else 'danger' }}">
+                                        {{ txn.status|title }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted-custom">No transactions yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
