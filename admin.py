@@ -1,4 +1,4 @@
-# admin.py - Complete admin panel with all functions including add user
+# admin.py - Complete admin panel with all functions including add user and withdrawal management
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_required, current_user
 from datetime import datetime, timezone
@@ -512,59 +512,111 @@ def rentals():
 
 @admin_bp.route('/withdrawals')
 def withdrawals():
+    """Admin view all withdrawal requests"""
     page = request.args.get('page', 1, type=int)
     per_page = 20
+    status_filter = request.args.get('status', '')
     
-    withdrawals = Transaction.query.filter_by(type='withdrawal')\
-        .order_by(Transaction.created_at.desc())\
+    query = Transaction.query.filter_by(type='withdrawal')
+    
+    if status_filter:
+        query = query.filter_by(status=status_filter)
+    
+    withdrawals = query.order_by(Transaction.created_at.desc())\
         .paginate(page=page, per_page=per_page, error_out=False)
     
-    return render_template('admin/withdrawals.html', withdrawals=withdrawals)
+    # Get stats
+    pending_count = Transaction.query.filter_by(type='withdrawal', status='pending').count()
+    approved_count = Transaction.query.filter_by(type='withdrawal', status='completed').count()
+    rejected_count = Transaction.query.filter_by(type='withdrawal', status='failed').count()
+    
+    return render_template('admin/withdrawals.html', 
+                         withdrawals=withdrawals,
+                         pending_count=pending_count,
+                         approved_count=approved_count,
+                         rejected_count=rejected_count)
 
 @admin_bp.route('/withdrawals/<int:transaction_id>/process', methods=['POST'])
 def process_withdrawal(transaction_id):
+    """Admin approve or reject withdrawal request"""
     transaction = Transaction.query.get_or_404(transaction_id)
     
+    if transaction.type != 'withdrawal':
+        flash('Invalid transaction type', 'danger')
+        return redirect(url_for('admin.withdrawals'))
+    
     if transaction.status != 'pending':
-        flash('Transaction already processed', 'warning')
+        flash('This withdrawal has already been processed', 'warning')
         return redirect(url_for('admin.withdrawals'))
     
     action = request.form.get('action')
+    admin_notes = request.form.get('admin_notes', '')
     
     if action == 'approve':
-        transaction.status = 'completed'
-        transaction.completed_at = datetime.now(timezone.utc)
-        
-        notification = Notification(
-            user_id=transaction.user_id,
-            title='Withdrawal Approved',
-            message=f'Your withdrawal of KSH {transaction.amount:,.2f} has been approved and processed.',
-            type='success'
-        )
-        db.session.add(notification)
-        
-        flash('Withdrawal approved successfully', 'success')
-    
+        try:
+            transaction.status = 'completed'
+            transaction.completed_at = datetime.now(timezone.utc)
+            
+            # Add admin notes to description
+            if admin_notes:
+                transaction.description = transaction.description + f' (Admin: {admin_notes})'
+            
+            db.session.commit()
+            
+            # Send SMS notification
+            try:
+                send_sms(transaction.payment_reference, 
+                        f"VCH: Your withdrawal of KSH {transaction.amount:,.2f} has been approved and processed. Thank you!")
+            except Exception as e:
+                logger.error(f"Error sending withdrawal SMS: {e}")
+            
+            # Create notification for user
+            notification = Notification(
+                user_id=transaction.user_id,
+                title='Withdrawal Approved',
+                message=f'Your withdrawal of KSH {transaction.amount:,.2f} has been approved and processed. Check your M-Pesa.',
+                type='success'
+            )
+            db.session.add(notification)
+            db.session.commit()
+            
+            flash(f'Withdrawal approved successfully!', 'success')
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error approving withdrawal: {str(e)}', 'danger')
+            
     elif action == 'reject':
-        transaction.status = 'failed'
-        
-        # Refund the user
-        user = User.query.get(transaction.user_id)
-        if user:
-            user.balance += transaction.amount
-            db.session.add(user)
-        
-        notification = Notification(
-            user_id=transaction.user_id,
-            title='Withdrawal Rejected',
-            message=f'Your withdrawal of KSH {transaction.amount:,.2f} has been rejected. Funds have been refunded to your balance.',
-            type='danger'
-        )
-        db.session.add(notification)
-        
-        flash('Withdrawal rejected and funds refunded', 'warning')
+        try:
+            transaction.status = 'failed'
+            transaction.description = transaction.description + f' (Rejected: {admin_notes})' if admin_notes else transaction.description
+            
+            # Refund the user
+            user = User.query.get(transaction.user_id)
+            if user:
+                user.balance += transaction.amount
+                db.session.add(user)
+            
+            db.session.commit()
+            
+            # Create notification for user
+            notification = Notification(
+                user_id=transaction.user_id,
+                title='Withdrawal Rejected',
+                message=f'Your withdrawal of KSH {transaction.amount:,.2f} was rejected. Funds have been refunded to your wallet.',
+                type='danger'
+            )
+            db.session.add(notification)
+            db.session.commit()
+            
+            flash(f'Withdrawal rejected and funds refunded.', 'warning')
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error rejecting withdrawal: {str(e)}', 'danger')
+    else:
+        flash('Invalid action', 'danger')
     
-    db.session.commit()
     return redirect(url_for('admin.withdrawals'))
 
 # ==================== DEPOSIT MANAGEMENT ====================

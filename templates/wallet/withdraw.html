@@ -12,7 +12,7 @@
     </nav>
     
     <h2><i class="fas fa-arrow-up-right gold"></i> Withdraw Funds</h2>
-    <p class="text-muted-custom">Withdraw your earnings to M-Pesa</p>
+    <p class="text-muted-custom">Request a withdrawal from your wallet</p>
     
     <div class="row">
         <div class="col-md-6">
@@ -22,7 +22,8 @@
                     <div class="display-6 gold">KSH {{ "%.2f"|format(current_user.balance or 0) }}</div>
                 </div>
                 
-                <form method="POST" action="{{ url_for('wallet.withdraw') }}">
+                <!-- Withdrawal Request Form -->
+                <form method="POST" action="{{ url_for('wallet.withdraw') }}" id="withdrawForm">
                     {{ form.hidden_tag() if form else '' }}
                     
                     <div class="mb-3">
@@ -36,8 +37,13 @@
                     
                     <div class="mb-3">
                         <label class="form-label">M-Pesa Phone Number</label>
-                        <input type="tel" name="phone" class="form-control" placeholder="254712345678" required>
+                        <input type="tel" name="phone" class="form-control" placeholder="254712345678" value="{{ current_user.phone or '' }}" required>
                         <small class="text-muted-custom">Enter the phone number to receive funds</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Reason (Optional)</label>
+                        <textarea name="reason" class="form-control" rows="2" placeholder="Enter reason for withdrawal (optional)"></textarea>
                     </div>
                     
                     <div class="mb-3">
@@ -47,20 +53,31 @@
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn-gold w-100">
-                        <i class="fas fa-check"></i> Withdraw Now
+                    <button type="submit" class="btn-gold w-100" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i> Submit Withdrawal Request
                     </button>
                 </form>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>How It Works:</strong>
+                    <ol class="mb-0 mt-2 text-muted-custom small">
+                        <li>Submit your withdrawal request</li>
+                        <li>Admin will review and process your request</li>
+                        <li>You'll receive a notification when processed</li>
+                        <li>Funds will be sent to your M-Pesa</li>
+                    </ol>
+                </div>
             </div>
             
             <div class="card-dark mt-3">
                 <h6><i class="fas fa-info-circle gold"></i> Withdrawal Information</h6>
                 <ul class="text-muted-custom small mb-0">
-                    <li>Withdrawals are processed within 24 hours</li>
+                    <li>Withdrawals are processed by admin within 24 hours</li>
                     <li>Minimum withdrawal: KSH 100</li>
-                    <li>Maximum withdrawal: KSH 50,000 per transaction</li>
+                    <li>Maximum withdrawal: KSH 50,000 per request</li>
                     <li>Funds are sent to your M-Pesa account</li>
-                    <li>No withdrawal fees charged</li>
+                    <li>You'll receive an SMS confirmation when processed</li>
                 </ul>
             </div>
         </div>
@@ -69,7 +86,7 @@
             <div class="card-dark">
                 <h6><i class="fas fa-clock gold"></i> Processing Time</h6>
                 <ul class="text-muted-custom small mb-0">
-                    <li><strong>M-Pesa:</strong> 1-24 hours</li>
+                    <li><strong>Admin Verification:</strong> 1-24 hours</li>
                     <li><strong>Weekends:</strong> May take longer</li>
                     <li><strong>Public Holidays:</strong> Processed next business day</li>
                 </ul>
@@ -78,37 +95,50 @@
                 
                 <h6><i class="fas fa-shield-alt gold"></i> Security</h6>
                 <p class="text-muted-custom small">
-                    All withdrawals are processed securely. You will receive an SMS confirmation once processed.
+                    All withdrawals are processed securely by our admin team. You will receive a notification once your request is processed.
                 </p>
                 
                 <hr class="border-gold">
                 
-                <h6><i class="fas fa-history gold"></i> Recent Withdrawals</h6>
-                {% if recent_withdrawals %}
-                    <div class="list-group list-group-flush">
-                        {% for withdrawal in recent_withdrawals[:5] %}
-                        <div class="list-group-item bg-transparent text-white border-secondary">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="badge bg-{{ 'success' if withdrawal.status == 'completed' else 'warning' if withdrawal.status == 'pending' else 'danger' }}">
-                                        {{ withdrawal.status|title }}
-                                    </span>
-                                    <span class="text-muted-custom small ms-2">{{ withdrawal.created_at.strftime('%d/%m/%Y') }}</span>
-                                </div>
-                                <div class="text-danger">KSH {{ "%.2f"|format(withdrawal.amount) }}</div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted-custom small mb-0">No recent withdrawals</p>
-                {% endif %}
-                
-                <div class="mt-2">
-                    <a href="{{ url_for('wallet.transactions') }}" class="text-gold small">
-                        View all transactions →
-                    </a>
+                <h6><i class="fas fa-history gold"></i> Recent Withdrawal Requests</h6>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_withdrawals %}
+                                {% for withdrawal in recent_withdrawals %}
+                                <tr>
+                                    <td>KSH {{ "%.2f"|format(withdrawal.amount) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if withdrawal.status == 'completed' else 'warning' if withdrawal.status == 'pending' else 'danger' }}">
+                                            {{ withdrawal.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ withdrawal.created_at.strftime('%d/%m/%Y') }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted-custom">No withdrawal requests</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
                 </div>
+            </div>
+            
+            <div class="card-dark mt-3">
+                <h6><i class="fas fa-question-circle gold"></i> Need Help?</h6>
+                <p class="text-muted-custom small">
+                    Contact our support team at 
+                    <a href="mailto:support@vch.com" class="text-gold">support@vch.com</a>
+                </p>
             </div>
         </div>
     </div>
@@ -118,7 +148,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     const amountInput = document.querySelector('input[name="amount"]');
     const balanceDisplay = document.getElementById('balanceAfter');
-    const currentBalance = {{ current_user.balance or 0 }};
+    const currentBalance = parseFloat('{{ current_user.balance or 0 }}') || 0;
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('withdrawForm');
     
     if (amountInput) {
         amountInput.addEventListener('input', function() {
@@ -133,6 +165,37 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    form.addEventListener('submit', function(e) {
+        const amount = parseFloat(amountInput.value) || 0;
+        
+        if (amount < 100) {
+            e.preventDefault();
+            alert('Minimum withdrawal is KSH 100');
+            return false;
+        }
+        
+        if (amount > 50000) {
+            e.preventDefault();
+            alert('Maximum withdrawal is KSH 50,000');
+            return false;
+        }
+        
+        if (amount > currentBalance) {
+            e.preventDefault();
+            alert('Insufficient balance. You have KSH ' + currentBalance.toFixed(2) + ' available.');
+            return false;
+        }
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting Request...';
+        
+        setTimeout(function() {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Withdrawal Request';
+        }, 30000);
+    });
 });
 </script>
 {% endblock %}

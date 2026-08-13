@@ -55,7 +55,7 @@ def create_app(config_name='development'):
     app.register_blueprint(admin_bp, url_prefix='/admin')
     
     # =============================================
-    # CONTEXT PROCESSOR - Add admin info for all templates
+    # CONTEXT PROCESSOR - Add admin info and logo for all templates
     # =============================================
     @app.context_processor
     def utility_processor():
@@ -64,7 +64,8 @@ def create_app(config_name='development'):
             'current_year': datetime.now(timezone.utc).year,
             'agent_levels': app.config.get('AGENT_LEVELS', {}),
             'admin_name': app.config.get('ADMIN_NAME', 'WINNY LANGAT'),
-            'admin_number': app.config.get('ADMIN_MPESA_NUMBER', '0753796259')
+            'admin_number': app.config.get('ADMIN_MPESA_NUMBER', '0753796259'),
+            'logo_url': url_for('static', filename='images/logo.png') if os.path.exists(os.path.join(app.root_path, 'static', 'images', 'logo.png')) else None
         }
     
     # Home route

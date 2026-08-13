@@ -20,8 +20,16 @@ def wallet():
     recent_transactions = Transaction.query.filter_by(user_id=current_user.id)\
         .order_by(Transaction.created_at.desc()).limit(10).all()
     
+    # Get pending withdrawal count
+    pending_withdrawals = Transaction.query.filter_by(
+        user_id=current_user.id,
+        type='withdrawal',
+        status='pending'
+    ).count()
+    
     return render_template('wallet/wallet.html', 
-                         recent_transactions=recent_transactions)
+                         recent_transactions=recent_transactions,
+                         pending_withdrawals=pending_withdrawals)
 
 # =============================================
 # DEPOSIT - DISABLED STK PUSH, USING MANUAL ONLY
@@ -137,52 +145,131 @@ def stk_push_coming_soon():
     return redirect(url_for('wallet.deposit'))
 
 # =============================================
-# OTHER WALLET ROUTES
+# WITHDRAWAL - ADMIN APPROVAL REQUIRED
 # =============================================
-
 @wallet_bp.route('/withdraw', methods=['GET', 'POST'])
 @login_required
 def withdraw():
-    """Withdraw funds"""
+    """Request withdrawal - Admin approval required"""
     form = WithdrawForm()
+    
+    # Get recent withdrawal requests
+    recent_withdrawals = Transaction.query.filter(
+        Transaction.user_id == current_user.id,
+        Transaction.type == 'withdrawal'
+    ).order_by(Transaction.created_at.desc()).limit(10).all()
+    
+    # Get pending withdrawal count
+    pending_withdrawals = Transaction.query.filter_by(
+        user_id=current_user.id,
+        type='withdrawal',
+        status='pending'
+    ).count()
     
     if request.method == 'POST':
         amount = request.form.get('amount', type=float)
         phone = request.form.get('phone', '')
+        reason = request.form.get('reason', '')
         
+        # Validate
+        errors = []
         if not amount or amount <= 0:
-            flash('Please enter a valid amount.', 'danger')
-            return render_template('wallet/withdraw.html', form=form)
+            errors.append('Please enter a valid amount')
+        elif amount < 100:
+            errors.append('Minimum withdrawal is KSH 100')
+        elif amount > 50000:
+            errors.append('Maximum withdrawal is KSH 50,000')
         
-        if amount < 100:
-            flash('Minimum withdrawal is KSH 100', 'danger')
-            return render_template('wallet/withdraw.html', form=form)
-        
-        if amount > 50000:
-            flash('Maximum withdrawal is KSH 50,000', 'danger')
-            return render_template('wallet/withdraw.html', form=form)
+        if current_user.balance < amount:
+            errors.append(f'Insufficient balance. Available: KSH {current_user.balance:,.2f}')
         
         if not phone:
-            flash('Please enter your phone number.', 'danger')
-            return render_template('wallet/withdraw.html', form=form)
+            errors.append('Please enter your phone number')
+        
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('wallet/withdraw.html', 
+                                 form=form, 
+                                 recent_withdrawals=recent_withdrawals,
+                                 pending_withdrawals=pending_withdrawals)
+        
+        # Format phone number
+        phone = re.sub(r'\D', '', phone)
+        if phone.startswith('0'):
+            phone = '254' + phone[1:]
+        elif len(phone) == 9:
+            phone = '254' + phone
+        elif len(phone) == 10 and not phone.startswith('254'):
+            phone = '254' + phone[1:]
         
         try:
-            transaction = process_withdrawal(
+            # Create pending withdrawal request
+            transaction = Transaction(
                 user_id=current_user.id,
+                type='withdrawal',
                 amount=amount,
-                phone=phone
+                fee=0,
+                net_amount=-amount,
+                description=f'Withdrawal request to {phone}' + (f' - {reason}' if reason else ''),
+                status='pending',  # Pending admin approval
+                payment_method='mpesa',
+                payment_reference=phone
             )
             
-            flash(f'Withdrawal of KSH {amount:,.2f} submitted successfully!', 'success')
-            return redirect(url_for('wallet.transactions'))
-        
-        except ValueError as e:
-            flash(str(e), 'danger')
+            # Deduct from user balance immediately (will be refunded if rejected)
+            current_user.balance -= amount
+            
+            db.session.add(transaction)
+            db.session.commit()
+            
+            # Create notification for user
+            notification = Notification(
+                user_id=current_user.id,
+                title='Withdrawal Request Submitted',
+                message=f'Your withdrawal request of KSH {amount:,.2f} has been submitted for admin approval.',
+                type='info'
+            )
+            db.session.add(notification)
+            
+            # Create notification for admin
+            from models import User
+            admins = User.query.filter(
+                db.or_(
+                    User.email == 'admin@vch.com',
+                    User.agent_level == 'level2',
+                    User.username == 'admin'
+                )
+            ).all()
+            
+            for admin in admins:
+                admin_notification = Notification(
+                    user_id=admin.id,
+                    title='New Withdrawal Request',
+                    message=f'User {current_user.username} requested withdrawal of KSH {amount:,.2f}. Please review and process.',
+                    type='warning',
+                    link='/admin/withdrawals'
+                )
+                db.session.add(admin_notification)
+            
+            db.session.commit()
+            
+            flash(f'Withdrawal request submitted successfully! Admin will process it shortly.', 'success')
+            return redirect(url_for('wallet.withdraw'))
+            
         except Exception as e:
-            flash(f'Error processing withdrawal: {str(e)}', 'danger')
+            db.session.rollback()
+            logger.error(f"Withdrawal request error: {e}")
+            flash(f'Error submitting withdrawal request: {str(e)}', 'danger')
     
-    return render_template('wallet/withdraw.html', form=form)
+    return render_template('wallet/withdraw.html', 
+                         form=form, 
+                         recent_withdrawals=recent_withdrawals,
+                         pending_withdrawals=pending_withdrawals)
 
+# =============================================
+# TRANSACTIONS
+# =============================================
 @wallet_bp.route('/transactions')
 @login_required
 def transactions():
@@ -195,6 +282,9 @@ def transactions():
     
     return render_template('wallet/transactions.html', transactions=transactions)
 
+# =============================================
+# EARNINGS
+# =============================================
 @wallet_bp.route('/earnings')
 @login_required
 def earnings():
@@ -238,6 +328,9 @@ def earnings():
                          month_earnings_total=month_earnings_total,
                          earnings_by_type=earnings_by_type_dict)
 
+# =============================================
+# STATEMENTS
+# =============================================
 @wallet_bp.route('/statements')
 @login_required
 def statements():
