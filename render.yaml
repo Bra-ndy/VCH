@@ -21,4 +21,4 @@ services:
       - key: ADMIN_MPESA_NUMBER 
         value: 0753796259 
     healthCheckPath: /health 
-    autoDeploy: true
+    autoDeploy: true"# Clean render.yaml - web service only" 
