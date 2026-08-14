@@ -2,142 +2,380 @@
 
 {% block title %}Rent {{ vehicle.name }} - {{ app_name or 'VCH' }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .rental-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .vehicle-preview {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+        background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    
+    .vehicle-preview img {
+        transition: transform 0.5s ease;
+        height: 300px;
+        width: 100%;
+        object-fit: cover;
+    }
+    
+    .vehicle-preview:hover img {
+        transform: scale(1.05);
+    }
+    
+    .vehicle-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(212, 175, 55, 0.9);
+        color: #0b0b0b;
+        padding: 0.4rem 1.2rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+        backdrop-filter: blur(4px);
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    }
+    
+    .price-tag {
+        background: rgba(212, 175, 55, 0.08);
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        border-radius: 0.75rem;
+        padding: 0.5rem 1rem;
+        display: inline-block;
+    }
+    
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .stat-item {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(212, 175, 55, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    
+    .stat-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 0.15rem;
+    }
+    
+    .summary-card {
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    
+    .summary-row:last-child {
+        border-bottom: none;
+    }
+    
+    .balance-card {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(212, 175, 55, 0.02));
+        border: 1px solid rgba(212, 175, 55, 0.12);
+        border-radius: 1rem;
+        padding: 1.2rem;
+    }
+    
+    .balance-amount {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gold);
+    }
+    
+    .insufficient-alert {
+        background: rgba(220, 53, 69, 0.08);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+        border-radius: 0.75rem;
+        padding: 0.8rem 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .sufficient-alert {
+        background: rgba(40, 167, 69, 0.08);
+        border: 1px solid rgba(40, 167, 69, 0.2);
+        border-radius: 0.75rem;
+        padding: 0.8rem 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .btn-deposit {
+        background: transparent;
+        color: var(--gold);
+        border: 2px solid rgba(212, 175, 55, 0.3);
+        padding: 0.6rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-deposit:hover {
+        background: rgba(212, 175, 55, 0.1);
+        border-color: var(--gold);
+        color: var(--gold);
+        transform: translateY(-2px);
+    }
+    
+    .profit-highlight {
+        color: #28a745;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .stat-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .vehicle-preview img {
+            height: 200px;
+        }
+        .balance-amount {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-    <nav aria-label="breadcrumb">
+<div class="container py-4 rental-container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb bg-transparent">
-            <li class="breadcrumb-item"><a href="{{ url_for('rentals.cars') }}" class="text-gold">Cars</a></li>
-            <li class="breadcrumb-item active text-white" aria-current="page">Rent {{ vehicle.name }}</li>
+            <li class="breadcrumb-item"><a href="{{ url_for('rentals.cars') }}" class="text-gold">
+                <i class="fas fa-car"></i> Cars
+            </a></li>
+            <li class="breadcrumb-item active text-white" aria-current="page">
+                <i class="fas fa-key"></i> Rent {{ vehicle.name }}
+            </li>
         </ol>
     </nav>
     
-    <h2><i class="fas fa-car gold"></i> Rent {{ vehicle.name }}</h2>
-    
-    <div class="row">
-        <!-- Vehicle Details -->
-        <div class="col-md-6">
-            <div class="card-dark">
-                <div class="text-center mb-3" style="height: 200px; overflow: hidden; border-radius: 0.5rem; background: #1a1a1a;">
-                    {% if vehicle.image and vehicle.image != '' %}
-                    <img src="{{ url_for('static', filename='images/cars/' + vehicle.image) }}" 
-                         alt="{{ vehicle.name }}" 
-                         class="img-fluid" 
-                         style="height: 200px; width: 100%; object-fit: cover;">
-                    {% else %}
-                    <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
-                        <i class="fas fa-car" style="font-size: 5rem; color: var(--gold);"></i>
-                    </div>
-                    {% endif %}
+    <div class="row g-4">
+        <!-- Left Column: Vehicle Preview -->
+        <div class="col-lg-5">
+            <div class="vehicle-preview">
+                {% if vehicle.image and vehicle.image != '' %}
+                <img src="{{ url_for('static', filename='images/cars/' + vehicle.image) }}" 
+                     alt="{{ vehicle.name }}">
+                {% else %}
+                <div style="display: flex; align-items: center; justify-content: center; height: 300px; background: #1a1a1a;">
+                    <i class="fas fa-car" style="font-size: 6rem; color: var(--gold); opacity: 0.3;"></i>
                 </div>
-                
-                <h4 class="text-center">{{ vehicle.name }}</h4>
-                <p class="text-center text-muted-custom">{{ vehicle.brand }}</p>
-                
-                <hr class="border-gold">
-                
-                <div class="row g-3">
-                    <div class="col-6">
-                        <div class="text-muted-custom small">Rental Price</div>
-                        <div class="fw-bold">KSH {{ "%.2f"|format(vehicle.rental_price) }}</div>
+                {% endif %}
+                <span class="vehicle-badge">
+                    <i class="fas fa-star"></i> Available
+                </span>
+            </div>
+            
+            <div class="mt-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="fw-bold mb-0">{{ vehicle.name }}</h3>
+                        <p class="text-muted-custom">{{ vehicle.brand }}</p>
                     </div>
-                    <div class="col-6">
-                        <div class="text-muted-custom small">Daily Earning</div>
-                        <div class="gold fw-bold">KSH {{ "%.2f"|format(vehicle.daily_earning) }}</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="text-muted-custom small">Total Profit</div>
-                        <div class="text-success fw-bold">KSH {{ "%.2f"|format(vehicle.total_profit) }}</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="text-muted-custom small">Rental Period</div>
-                        <div class="fw-bold">{{ vehicle.rental_period }} days</div>
+                    <div class="price-tag">
+                        <span class="text-muted-custom" style="font-size: 0.7rem;">RENTAL PRICE</span>
+                        <div class="gold fw-bold" style="font-size: 1.2rem;">KSH {{ "%.2f"|format(vehicle.rental_price) }}</div>
                     </div>
                 </div>
                 
                 {% if vehicle.description %}
-                <hr class="border-gold">
-                <p class="text-muted-custom small">{{ vehicle.description }}</p>
+                <p class="text-muted-custom small mt-2">{{ vehicle.description }}</p>
                 {% endif %}
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="stat-grid mt-3">
+                <div class="stat-item">
+                    <div class="stat-label"><i class="fas fa-coins gold"></i> Daily Earning</div>
+                    <div class="stat-value gold">KSH {{ "%.2f"|format(vehicle.daily_earning) }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label"><i class="fas fa-calendar-alt gold"></i> Rental Period</div>
+                    <div class="stat-value text-white">{{ vehicle.rental_period }} days</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label"><i class="fas fa-chart-line gold"></i> Total Profit</div>
+                    <div class="stat-value profit-highlight">KSH {{ "%.2f"|format(vehicle.total_profit) }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label"><i class="fas fa-car gold"></i> Status</div>
+                    <div class="stat-value text-success">
+                        <i class="fas fa-check-circle"></i> Available
+                    </div>
+                </div>
             </div>
         </div>
         
-        <!-- Rental Form -->
-        <div class="col-md-6">
-            <div class="card-dark">
-                <h5>Confirm Rental</h5>
+        <!-- Right Column: Rental Form -->
+        <div class="col-lg-7">
+            <div class="summary-card">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-file-signature gold"></i> Confirm Rental
+                </h5>
                 
                 <form method="POST" action="{{ url_for('rentals.rent', vehicle_id=vehicle.id) }}">
                     {{ form.hidden_tag() if form else '' }}
                     
-                    <div class="mb-3">
-                        <label class="form-label">Rental Period</label>
-                        <select name="rental_period" class="form-control" disabled>
-                            <option value="{{ vehicle.rental_period }}">{{ vehicle.rental_period }} Days</option>
-                        </select>
-                        <small class="text-muted-custom">Rental period is fixed at {{ vehicle.rental_period }} days for this vehicle</small>
-                    </div>
+                    <input type="hidden" name="rental_period" value="{{ vehicle.rental_period }}">
+                    <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
                     
-                    <hr class="border-gold">
-                    
+                    <!-- Rental Period Display -->
                     <div class="mb-3">
-                        <h6>Payment Summary</h6>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted-custom">Rental Price:</span>
-                            <span>KSH {{ "%.2f"|format(vehicle.rental_price) }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted-custom">Daily Earning:</span>
-                            <span class="gold">KSH {{ "%.2f"|format(vehicle.daily_earning) }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted-custom">Rental Period:</span>
-                            <span>{{ vehicle.rental_period }} days</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted-custom">Total Profit:</span>
-                            <span class="text-success">KSH {{ "%.2f"|format(vehicle.total_profit) }}</span>
+                        <label class="form-label text-muted-custom">
+                            <i class="fas fa-clock"></i> Rental Period
+                        </label>
+                        <div style="background: rgba(255,255,255,0.03); border-radius: 0.75rem; padding: 0.75rem 1rem; border: 1px solid rgba(255,255,255,0.06);">
+                            <span class="fw-bold">{{ vehicle.rental_period }} Days</span>
+                            <span class="text-muted-custom small ms-2">
+                                <i class="fas fa-info-circle"></i> Fixed period for this vehicle
+                            </span>
                         </div>
                     </div>
                     
-                    <hr class="border-gold">
+                    <hr class="border-gold opacity-25">
                     
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted-custom">Your Balance:</span>
-                            <span>KSH {{ "%.2f"|format(current_user.balance) }}</span>
+                    <!-- Payment Summary -->
+                    <h6 class="fw-bold mb-2">
+                        <i class="fas fa-receipt gold"></i> Payment Summary
+                    </h6>
+                    <div class="summary-row">
+                        <span class="text-muted-custom">Rental Price</span>
+                        <span class="fw-bold">KSH {{ "%.2f"|format(vehicle.rental_price) }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="text-muted-custom">Daily Earning</span>
+                        <span class="gold fw-bold">KSH {{ "%.2f"|format(vehicle.daily_earning) }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="text-muted-custom">Rental Period</span>
+                        <span>{{ vehicle.rental_period }} days</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="text-muted-custom">Total Profit</span>
+                        <span class="profit-highlight">+ KSH {{ "%.2f"|format(vehicle.total_profit) }}</span>
+                    </div>
+                    
+                    <hr class="border-gold opacity-25">
+                    
+                    <!-- Balance Section -->
+                    <div class="balance-card mt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted-custom">Your Balance</span>
+                            <span class="balance-amount">KSH {{ "%.2f"|format(current_user.balance) }}</span>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted-custom">Cost:</span>
+                        
+                        <div class="d-flex justify-content-between mt-2">
+                            <span class="text-muted-custom">Rental Cost</span>
                             <span class="fw-bold">KSH {{ "%.2f"|format(vehicle.rental_price) }}</span>
                         </div>
-                        <div class="d-flex justify-content-between mt-2">
+                        
+                        <div class="mt-3">
                             {% if current_user.balance >= vehicle.rental_price %}
-                                <span class="text-success">✅ Sufficient balance</span>
-                                <span class="text-success">Remaining: KSH {{ "%.2f"|format(current_user.balance - vehicle.rental_price) }}</span>
+                            <div class="sufficient-alert">
+                                <i class="fas fa-check-circle text-success" style="font-size: 1.2rem;"></i>
+                                <div>
+                                    <span class="text-success fw-bold">✅ Sufficient Balance</span>
+                                    <div class="text-muted-custom small">
+                                        Remaining after rental: <strong class="text-success">KSH {{ "%.2f"|format(current_user.balance - vehicle.rental_price) }}</strong>
+                                    </div>
+                                </div>
+                            </div>
                             {% else %}
-                                <span class="text-danger">❌ Insufficient balance</span>
-                                <span class="text-danger">Need: KSH {{ "%.2f"|format(vehicle.rental_price - current_user.balance) }}</span>
+                            <div class="insufficient-alert">
+                                <i class="fas fa-exclamation-circle text-danger" style="font-size: 1.2rem;"></i>
+                                <div>
+                                    <span class="text-danger fw-bold">❌ Insufficient Balance</span>
+                                    <div class="text-muted-custom small">
+                                        Need: <strong class="text-danger">KSH {{ "%.2f"|format(vehicle.rental_price - current_user.balance) }}</strong>
+                                    </div>
+                                </div>
+                            </div>
                             {% endif %}
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn-gold w-100" {% if current_user.balance < vehicle.rental_price %}disabled{% endif %}>
-                        <i class="fas fa-check"></i> 
-                        {% if current_user.balance >= vehicle.rental_price %}
-                            Confirm Rental ({{ vehicle.rental_period }} days)
-                        {% else %}
-                            Insufficient Balance
+                    <!-- Action Buttons -->
+                    <div class="mt-3">
+                        <button type="submit" class="btn-gold w-100" 
+                                {% if current_user.balance < vehicle.rental_price %}disabled{% endif %}
+                                style="padding: 1rem; font-size: 1.1rem;">
+                            <i class="fas fa-{{ 'check' if current_user.balance >= vehicle.rental_price else 'lock' }}"></i>
+                            {% if current_user.balance >= vehicle.rental_price %}
+                                Confirm Rental ({{ vehicle.rental_period }} days)
+                            {% else %}
+                                Insufficient Balance
+                            {% endif %}
+                        </button>
+                        
+                        {% if current_user.balance < vehicle.rental_price %}
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('wallet.deposit') }}" class="btn-deposit w-100 justify-content-center">
+                                <i class="fas fa-plus-circle"></i> Deposit Funds
+                            </a>
+                            <small class="text-muted-custom d-block mt-2">
+                                <i class="fas fa-info-circle"></i> Top up your wallet to rent this vehicle
+                            </small>
+                        </div>
                         {% endif %}
-                    </button>
-                    
-                    {% if current_user.balance < vehicle.rental_price %}
-                    <div class="mt-2 text-center">
-                        <a href="{{ url_for('wallet.deposit') }}" class="text-gold">
-                            <i class="fas fa-plus-circle"></i> Deposit Funds
-                        </a>
                     </div>
-                    {% endif %}
                 </form>
+            </div>
+            
+            <!-- Trust Badges -->
+            <div class="d-flex justify-content-center gap-4 mt-3 text-center">
+                <div>
+                    <i class="fas fa-shield-alt gold"></i>
+                    <span class="text-muted-custom small d-block">Secure Payment</span>
+                </div>
+                <div>
+                    <i class="fas fa-clock gold"></i>
+                    <span class="text-muted-custom small d-block">Instant Confirmation</span>
+                </div>
+                <div>
+                    <i class="fas fa-headset gold"></i>
+                    <span class="text-muted-custom small d-block">24/7 Support</span>
+                </div>
             </div>
         </div>
     </div>
