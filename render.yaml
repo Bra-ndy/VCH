@@ -3,6 +3,7 @@ services:
     name: vch-production 
     env: python 
     region: oregon 
+    buildCommand: bash build.sh
     startCommand: gunicorn -c gunicorn.conf.py app:app 
     envVars: 
       - key: FLASK_ENV 
@@ -32,4 +33,4 @@ services:
     autoScaling: 
       enabled: true 
       maxSizeGB: 50 
-    backupSchedule: "0 0 * * *" 
+    backupSchedule: "0 0 * * *"

@@ -1,17 +1,39 @@
-#!/usr/bin/env bash
-set -o errexit
+#!/bin/bash
+set -e
 
-echo "=== Installing dependencies ==="
+echo "=== VCH Build Starting ==="
+echo "Python version: $(python --version)"
+echo "Current directory: $(pwd)"
+
+# Create and activate virtual environment if needed
+if [ ! -d ".venv" ]; then
+    echo "Creating virtual environment..."
+    python -m venv .venv
+fi
+
+echo "Activating virtual environment..."
+source .venv/bin/activate
+
+# Upgrade pip
+echo "Upgrading pip..."
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
 
-echo "=== Checking Flask installation ==="
-python -c "import flask; print('Flask version:', flask.__version__)"
+# Install dependencies with verbose output
+echo "Installing dependencies from requirements.txt..."
+python -m pip install -r requirements.txt --verbose
 
-echo "=== Checking Gunicorn installation ==="
-python -c "import gunicorn; print('Gunicorn version:', gunicorn.__version__)"
+# Verify critical packages
+echo "Verifying installations..."
+python -c "import flask; print(f'✅ Flask {flask.__version__} installed')"
+python -c "import gunicorn; print(f'✅ Gunicorn {gunicorn.__version__} installed')"
+python -c "import flask_sqlalchemy; print(f'✅ Flask-SQLAlchemy installed')"
 
-echo "=== Running database migrations ==="
-python -m flask db upgrade || echo "Migration skipped"
+# Run migrations (if migrations folder exists)
+echo "Running database migrations..."
+if [ -d "migrations" ]; then
+    python -m flask db upgrade
+else
+    echo "⚠️ No migrations folder found, skipping..."
+fi
 
 echo "=== Build completed successfully ==="
