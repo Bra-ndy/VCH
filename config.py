@@ -1,19 +1,55 @@
 import os
 from dotenv import load_dotenv
+from urllib.parse import urlparse
 
 load_dotenv()
 
 class Config:
-    # Database
+    # =============================================
+    # DATABASE - Production Ready with PostgreSQL
+    # =============================================
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///vch.db')
+    
+    # Database URL with PostgreSQL support
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    
+    # If using PostgreSQL, fix the URL format (Render uses postgres://)
+    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
+        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
+    
+    # Fallback for development
+    if not SQLALCHEMY_DATABASE_URI:
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///instance/vch.db'
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # App Settings
+    # Production Connection Pool Settings
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 20,              # Max connections in pool
+        'max_overflow': 40,           # Extra connections when pool is full
+        'pool_timeout': 30,           # Wait time for connection
+        'pool_recycle': 300,          # Recycle connections every 5 minutes
+        'pool_pre_ping': True,        # Check connection before using
+        'echo_pool': False,           # Don't log pool events
+    }
+    
+    # =============================================
+    # APP SETTINGS
+    # =============================================
     APP_NAME = os.getenv('APP_NAME', 'VCH')
     APP_URL = os.getenv('APP_URL', 'http://localhost:5000')
     
-    # Mail
+    # =============================================
+    # LOGGING - Production Ready
+    # =============================================
+    LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+    LOG_FILE = os.getenv('LOG_FILE', 'logs/vch.log')
+    LOG_MAX_BYTES = int(os.getenv('LOG_MAX_BYTES', 10485760))  # 10MB
+    LOG_BACKUP_COUNT = int(os.getenv('LOG_BACKUP_COUNT', 10))
+    
+    # =============================================
+    # MAIL SETTINGS
+    # =============================================
     MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
     MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True') == 'True'
@@ -21,12 +57,16 @@ class Config:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
     
-    # SMS
+    # =============================================
+    # SMS SETTINGS
+    # =============================================
     SMS_API_KEY = os.getenv('SMS_API_KEY')
     SMS_USERNAME = os.getenv('SMS_USERNAME')
     SMS_SENDER_ID = os.getenv('SMS_SENDER_ID', 'VCH')
     
-    # M-Pesa Configuration
+    # =============================================
+    # M-PESA CONFIGURATION
+    # =============================================
     MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY')
     MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET')
     MPESA_PASSKEY = os.getenv('MPESA_PASSKEY')
@@ -54,51 +94,64 @@ class Config:
     # =============================================
     # ADMIN DEPOSIT SETTINGS
     # =============================================
-    # Admin name for deposits
     ADMIN_NAME = os.getenv('ADMIN_NAME', 'WINNY LANGAT')
-    
-    # Admin phone number for deposits (formatted for display)
     ADMIN_MPESA_NUMBER = os.getenv('ADMIN_MPESA_NUMBER', '0753796259')
-    
-    # Admin phone number for M-Pesa (formatted for API - with country code)
     ADMIN_MPESA_NUMBER_API = os.getenv('ADMIN_MPESA_NUMBER_API', '254753796259')
-    
-    # Require admin verification for manual M-Pesa deposits
     DEPOSIT_VERIFICATION_REQUIRED = os.getenv('DEPOSIT_VERIFICATION_REQUIRED', 'True') == 'True'
-    
-    # Time (in minutes) after which pending deposits are considered stale
     DEPOSIT_STALE_MINUTES = int(os.getenv('DEPOSIT_STALE_MINUTES', '60'))
     
     # =============================================
-    
-    # Redis/Celery
+    # REDIS/CELERY
+    # =============================================
     REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
     
-    # Security
+    # =============================================
+    # SECURITY
+    # =============================================
     BCRYPT_ROUNDS = 12
     REMEMBER_COOKIE_DURATION = 30
     
-    # Upload settings
+    # Session settings for production
+    SESSION_TYPE = 'filesystem'
+    SESSION_PERMANENT = False
+    SESSION_USE_SIGNER = True
+    SESSION_FILE_DIR = '/tmp/flask_session'
+    
+    # =============================================
+    # UPLOAD SETTINGS
+    # =============================================
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     UPLOAD_FOLDER = 'static/uploads'
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     
-    # Wallet Settings
+    # =============================================
+    # WALLET SETTINGS
+    # =============================================
     MINIMUM_WITHDRAWAL = 100
     MAXIMUM_WITHDRAWAL = 50000
     WITHDRAWAL_FEE = 0
     
-    # Referral Settings
-    REFERRAL_BONUS_PERCENTAGE = 10
-    REFERRAL_COMMISSION_PERCENTAGE = 2
+    # =============================================
+    # REFERRAL SETTINGS
+    # =============================================
+    REFERRAL_BONUS_AMOUNT = 150.0      # KSH 150 for referrer
+    REFERRAL_WELCOME_BONUS = 50.0      # KSH 50 for new user
+    REFERRAL_BONUS_PERCENTAGE = 15     # 15% of friend's first purchase
+    REFERRAL_COMMISSION_PERCENTAGE = 2  # 2% daily commission on feed income
     
-    # Rental Settings
+    # =============================================
+    # RENTAL SETTINGS
+    # =============================================
     DAILY_EARNING_RATE = 0.05
     
-    # Servicing Settings
-    SERVICE_EARNING = 50
+    # =============================================
+    # SERVICING SETTINGS
+    # =============================================
+    SERVICE_AMOUNT = 5.0               # KSH 5 per day (changed from 50)
     
-    # Agent Levels
+    # =============================================
+    # AGENT LEVELS
+    # =============================================
     AGENT_LEVELS = {
         'junior': {
             'members': 20,
@@ -113,9 +166,10 @@ class Config:
         'level2': {
             'members': 100,
             'salary': 100000,
-            'perks': ['team_dinner']
+            'perks': ['team_dinner', 'bonus']
         }
     }
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -125,7 +179,7 @@ class DevelopmentConfig(Config):
     # Development M-Pesa settings
     MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL', 'https://your-domain.com/payments/mpesa/callback')
     
-    # Development admin settings - convert to string
+    # Development admin settings
     ADMIN_NAME = str(os.getenv('ADMIN_NAME', 'WINNY LANGAT'))
     ADMIN_MPESA_NUMBER = str(os.getenv('ADMIN_MPESA_NUMBER', '0753796259'))
     ADMIN_MPESA_NUMBER_API = str(os.getenv('ADMIN_MPESA_NUMBER_API', '254753796259'))
@@ -142,37 +196,70 @@ class DevelopmentConfig(Config):
         if ngrok_url:
             return f'{ngrok_url}/payments/mpesa/callback'
         return 'https://your-domain.com/payments/mpesa/callback'
+    
+    # Development database - use SQLite for speed
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///instance/vch.db')
+    
+    # Remove connection pooling for SQLite
+    SQLALCHEMY_ENGINE_OPTIONS = {}
+
 
 class ProductionConfig(Config):
     DEBUG = False
     SQLALCHEMY_ECHO = False
     MPESA_ENVIRONMENT = 'production'
     
+    # Production database - must use PostgreSQL
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    
+    # Validate database URL is set in production
+    if not SQLALCHEMY_DATABASE_URI:
+        raise ValueError("DATABASE_URL must be set in production")
+    
+    # Fix PostgreSQL URL format
+    if SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
+        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
+    
+    # Production connection pool settings
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 20,
+        'max_overflow': 40,
+        'pool_timeout': 30,
+        'pool_recycle': 300,
+        'pool_pre_ping': True,
+        'echo_pool': False,
+    }
+    
     # Production M-Pesa settings - must be set in .env
     MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL')
+    if not MPESA_CALLBACK_URL:
+        raise ValueError("MPESA_CALLBACK_URL must be set in production")
     
     # Security - force HTTPS in production
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
     PREFERRED_URL_SCHEME = 'https'
     
-    # Production admin settings - convert to string
+    # Production admin settings
     ADMIN_NAME = str(os.getenv('ADMIN_NAME', 'WINNY LANGAT'))
-    ADMIN_MPESA_NUMBER = str(os.getenv('ADMIN_MPESA_NUMBER', '0753796259'))
+    ADMIN_MPESA_NUMBER = str(os.getenv('ADMIN_MPESA_NUMBER'))
+    if not ADMIN_MPESA_NUMBER:
+        raise ValueError("ADMIN_MPESA_NUMBER must be set in production")
     ADMIN_MPESA_NUMBER_API = str(os.getenv('ADMIN_MPESA_NUMBER_API', '254753796259'))
     DEPOSIT_VERIFICATION_REQUIRED = True
     
     # CSRF Configuration - Enabled for production
     WTF_CSRF_ENABLED = True
     WTF_CSRF_SECRET_KEY = os.getenv('SECRET_KEY')
+    if not WTF_CSRF_SECRET_KEY:
+        raise ValueError("SECRET_KEY must be set in production")
     
-    # Validate admin number is set in production
-    @property
-    def ADMIN_MPESA_NUMBER(self):
-        value = os.getenv('ADMIN_MPESA_NUMBER')
-        if not value:
-            raise ValueError("ADMIN_MPESA_NUMBER must be set in production")
-        return str(value)
+    # Session settings for production
+    SESSION_FILE_DIR = '/tmp/flask_session'
+    
+    # Logging for production
+    LOG_LEVEL = 'INFO'
+
 
 class TestingConfig(Config):
     TESTING = True
@@ -187,10 +274,44 @@ class TestingConfig(Config):
     ADMIN_MPESA_NUMBER = '0753796259'
     ADMIN_MPESA_NUMBER_API = '254753796259'
     DEPOSIT_VERIFICATION_REQUIRED = False
+    
+    # Disable connection pooling for tests
+    SQLALCHEMY_ENGINE_OPTIONS = {}
 
+
+# =============================================
+# CONFIGURATION DICTIONARY
+# =============================================
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
     'testing': TestingConfig,
     'default': DevelopmentConfig
 }
+
+
+# =============================================
+# HELPER FUNCTIONS
+# =============================================
+def get_config():
+    """Get the current configuration based on environment"""
+    env = os.getenv('FLASK_ENV', 'development')
+    return config.get(env, config['default'])
+
+
+def is_production():
+    """Check if running in production mode"""
+    return os.getenv('FLASK_ENV', 'development') == 'production'
+
+
+def is_development():
+    """Check if running in development mode"""
+    return os.getenv('FLASK_ENV', 'development') == 'development'
+
+
+def get_database_url():
+    """Get the database URL with proper formatting"""
+    url = os.getenv('DATABASE_URL')
+    if url and url.startswith('postgres://'):
+        url = url.replace('postgres://', 'postgresql://', 1)
+    return url or 'sqlite:///instance/vch.db'

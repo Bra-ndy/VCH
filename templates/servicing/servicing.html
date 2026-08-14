@@ -4,83 +4,144 @@
 
 {% block content %}
 <div class="container py-4">
-    <h2><i class="fas fa-wrench gold"></i> Daily Servicing</h2>
-    <p class="text-muted-custom">Perform daily servicing to earn KSH 50</p>
-    
-    <!-- Stats -->
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="fas fa-wrench gold"></i> Daily Servicing
+            </h2>
+            <p class="text-muted-custom mb-0">Perform daily servicing to earn <strong class="text-gold">KSH {{ "%.2f"|format(daily_earning or 5.0) }}</strong> per day</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-{{ 'success' if is_serviced_today else 'warning' }}">
+                <i class="fas fa-{{ 'check-circle' if is_serviced_today else 'clock' }}"></i>
+                {{ 'Completed Today' if is_serviced_today else 'Pending' }}
+            </span>
+            {% if streak and streak > 0 %}
+            <span class="badge bg-danger">
+                <i class="fas fa-fire"></i> {{ streak }} Day Streak!
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="stat-card">
-                <div class="number">KSH {{ "%.2f"|format(total_earnings or 0) }}</div>
-                <div class="label">Total Service Earnings</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="number">KSH 50</div>
-                <div class="label">Daily Earning</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="number">
-                    {% if today_service %}
-                    <span class="text-success">✅ Done</span>
-                    {% else %}
-                    <span class="text-warning">⏳ Pending</span>
-                    {% endif %}
+                <div class="stat-header">
+                    <span class="stat-label">Total Service Earnings</span>
+                    <i class="fas fa-coins stat-icon text-success"></i>
                 </div>
-                <div class="label">Today's Service</div>
+                <div class="stat-value text-success">KSH {{ "%.2f"|format(total_earnings or 0) }}</div>
+                <div class="stat-footer">
+                    <span class="text-muted-custom"><i class="fas fa-calendar-check"></i> Lifetime earnings</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Daily Earning</span>
+                    <i class="fas fa-money-bill-wave stat-icon text-gold"></i>
+                </div>
+                <div class="stat-value text-gold">KSH {{ "%.2f"|format(daily_earning or 5.0) }}</div>
+                <div class="stat-footer">
+                    <span class="text-muted-custom"><i class="fas fa-clock"></i> Per day</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Service Streak</span>
+                    <i class="fas fa-fire stat-icon text-warning"></i>
+                </div>
+                <div class="stat-value text-warning">{{ streak or 0 }} days</div>
+                <div class="stat-footer">
+                    <span class="text-muted-custom"><i class="fas fa-calendar-alt"></i> Consecutive days</span>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Service Action -->
+
+    <!-- Active Rental Warning -->
+    {% if not has_active_rental %}
+    <div class="alert alert-warning mb-4" style="border-left: 4px solid #ffc107;">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-exclamation-triangle fa-2x"></i>
+            <div>
+                <strong>No Active Rental Found!</strong>
+                <p class="mb-0">You need an active car rental to perform daily servicing. 
+                    <a href="{{ url_for('rentals.cars') }}" class="text-gold fw-bold">Rent a car now →</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Perform Service Card -->
     <div class="card-dark mb-4">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h5><i class="fas fa-tools gold"></i> Perform Daily Servicing</h5>
-                <p class="text-muted-custom mb-md-0">
-                    {% if today_service %}
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="service-icon">
+                <i class="fas fa-wrench"></i>
+            </div>
+            <div>
+                <h5 class="mb-0">Perform Daily Servicing</h5>
+                <p class="text-muted-custom small mb-0">
+                    {% if is_serviced_today %}
                     You have already performed daily servicing today.
-                    <span class="text-success">✅ Earned KSH {{ "%.2f"|format(today_service.earning) }}</span>
+                    <span class="text-success">✅ Earned KSH {{ "%.2f"|format(daily_earning or 5.0) }}</span>
+                    {% elif not has_active_rental %}
+                    Rent a car first to unlock daily servicing!
                     {% else %}
-                    Click the button to perform daily servicing and earn KSH 50.
+                    Click the button to perform daily servicing and earn <strong class="text-gold">KSH {{ "%.2f"|format(daily_earning or 5.0) }}</strong>
                     {% endif %}
                 </p>
             </div>
-            <div class="col-md-4 text-end">
-                {% if today_service %}
-                    <button class="btn-outline-gold" disabled>
-                        <i class="fas fa-check"></i> Completed Today
-                    </button>
-                {% else %}
-                    <form method="POST" action="{{ url_for('servicing.perform_service') }}">
-                        <button type="submit" class="btn-gold">
-                            <i class="fas fa-wrench"></i> Perform Service
-                        </button>
-                    </form>
-                {% endif %}
-            </div>
         </div>
         
-        {% if not today_service %}
-        <div class="alert alert-info mt-3 mb-0">
-            <i class="fas fa-info-circle"></i> 
-            Daily servicing earns you <strong class="gold">KSH 50</strong> every day. 
-            Make sure to perform it daily to maximize your earnings!
+        <form method="POST" action="{{ url_for('servicing.perform_service') }}">
+            <button type="submit" 
+                    class="btn-gold w-100" 
+                    {% if is_serviced_today or not has_active_rental %}disabled{% endif %}
+                    style="padding: 1rem; font-size: 1.1rem;">
+                <i class="fas fa-{{ 'check-circle' if is_serviced_today else 'play' }} me-2"></i>
+                {% if is_serviced_today %}
+                    Completed Today ✅
+                {% elif not has_active_rental %}
+                    Rent a Car First 🚗
+                {% else %}
+                    Perform Service 🛠️
+                {% endif %}
+            </button>
+        </form>
+        
+        <div class="mt-3 p-3" style="background: rgba(212, 175, 55, 0.05); border-radius: 0.75rem; border: 1px solid rgba(212, 175, 55, 0.08);">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-info-circle" style="color: var(--gold);"></i>
+                <span class="small text-muted-custom">
+                    <strong>KSH {{ "%.2f"|format(daily_earning or 5.0) }}</strong> earned per day. 
+                    {% if has_active_rental %}
+                        You have <strong>{{ active_rentals_count }}</strong> active rental(s).
+                    {% endif %}
+                    Make sure to perform servicing daily to maximize your earnings!
+                    {% if streak and streak > 0 %}
+                        <br><i class="fas fa-fire text-warning"></i> You're on a <strong>{{ streak }}-day</strong> streak! Keep it up! 🔥
+                    {% endif %}
+                </span>
+            </div>
         </div>
-        {% endif %}
     </div>
-    
+
     <!-- Service History -->
     <div class="card-dark">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5><i class="fas fa-history gold"></i> Service History</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="fas fa-history gold me-2"></i>Recent Service History</h5>
             <a href="{{ url_for('servicing.history') }}" class="text-gold">View All →</a>
         </div>
         
-        {% if history.items %}
+        {% if history and history.items %}
             <div class="table-responsive">
                 <table class="table table-dark table-hover">
                     <thead>
@@ -93,8 +154,8 @@
                     <tbody>
                         {% for record in history.items[:10] %}
                         <tr>
-                            <td>{{ record.service_date.strftime('%d/%m/%Y %H:%M') }}</td>
-                            <td class="text-success">KSH {{ "%.2f"|format(record.earning) }}</td>
+                            <td class="text-muted-custom">{{ record.service_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td class="text-success">+KSH {{ "%.2f"|format(record.earning) }}</td>
                             <td><span class="badge bg-success">Completed</span></td>
                         </tr>
                         {% endfor %}
@@ -111,7 +172,7 @@
             {% endif %}
         {% else %}
             <div class="text-center py-4">
-                <i class="fas fa-calendar-day" style="font-size: 3rem; color: #2a2a2a;"></i>
+                <i class="fas fa-calendar-day" style="font-size: 3rem; color: var(--text-muted); opacity: 0.3;"></i>
                 <p class="text-muted-custom mt-3">No service history yet</p>
                 <p class="text-muted-custom small">Start by performing your first daily servicing!</p>
             </div>
@@ -120,13 +181,135 @@
     
     <!-- Tips -->
     <div class="card-dark mt-4">
-        <h6><i class="fas fa-lightbulb gold"></i> Tips</h6>
-        <ul class="text-muted-custom small mb-0">
-            <li>Perform servicing daily to earn a consistent KSH 50 per day</li>
-            <li>Over 30 days, servicing alone can earn you KSH 1,500</li>
+        <h6><i class="fas fa-lightbulb gold me-2"></i>Tips</h6>
+        <ul class="text-muted-custom small mb-0" style="padding-left: 1.2rem;">
+            <li>Perform servicing daily to earn a consistent <strong class="text-gold">KSH {{ "%.2f"|format(daily_earning or 5.0) }}</strong> per day</li>
+            <li>Over 30 days, servicing alone can earn you <strong class="text-gold">KSH {{ "%.2f"|format((daily_earning or 5.0) * 30) }}</strong></li>
             <li>Combine servicing with rentals for higher daily earnings</li>
             <li>Refer friends to earn additional commission on their earnings</li>
+            <li>Maintain your streak to stay consistent! 🔥</li>
         </ul>
     </div>
 </div>
+
+<style>
+    .service-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(212, 175, 55, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--gold);
+        flex-shrink: 0;
+    }
+    .text-gold {
+        color: var(--gold) !important;
+    }
+    .stat-value.text-gold {
+        color: var(--gold) !important;
+    }
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 1rem;
+        padding: 1.25rem 1.5rem;
+        transition: all 0.3s ease;
+        height: 100%;
+        backdrop-filter: blur(8px);
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    .stat-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .stat-icon {
+        font-size: 1.25rem;
+        opacity: 0.6;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0.25rem 0;
+        letter-spacing: -0.5px;
+    }
+    .stat-footer {
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 0.5rem;
+    }
+    .card-dark {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        backdrop-filter: blur(8px);
+    }
+    .btn-gold {
+        background: linear-gradient(135deg, #d4af37, #b8962e);
+        color: #0d0d0d;
+        border: none;
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+    }
+    .btn-gold:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        color: #0d0d0d;
+    }
+    .btn-gold:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .btn-outline-gold {
+        background: transparent;
+        color: var(--gold);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .btn-outline-gold:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    @media (max-width: 768px) {
+        .stat-value {
+            font-size: 1.5rem;
+        }
+        .stat-card {
+            padding: 1rem;
+        }
+    }
+</style>
 {% endblock %}

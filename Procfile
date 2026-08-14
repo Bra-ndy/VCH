@@ -1,1 +1,1 @@
-web: gunicorn -w 4 -k eventlet "app:create_app()" 
+web: gunicorn -c gunicorn.conf.py app:app 
