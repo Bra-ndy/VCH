@@ -26,13 +26,13 @@
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
             <div class="stat-card">
-                <div class="number">{{ today_earnings_total|default(0)|round(2) }}</div>
+                <div class="number">KSH {{ "%.2f"|format(today_earnings_total|default(0)) }}</div>
                 <div class="label">Today's Income</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="stat-card">
-                <div class="number">{{ current_user.total_earned|default(0)|round(2) }}</div>
+                <div class="number">KSH {{ "%.2f"|format(total_earned|default(0)) }}</div>
                 <div class="label">Total Earned</div>
             </div>
         </div>
@@ -94,7 +94,12 @@
     <div class="card-dark mb-4">
         <div class="d-flex justify-content-between align-items-center">
             <h5><i class="fas fa-car gold"></i> Active Rentals</h5>
-            <a href="{{ url_for('rentals.active_rentals') }}" class="text-gold">View All →</a>
+            <div>
+                <a href="{{ url_for('rentals.active_rentals') }}" class="text-gold me-3">View All →</a>
+                <a href="{{ url_for('rentals.cars') }}" class="btn-gold btn-sm">
+                    <i class="fas fa-plus-circle"></i> Rent More Cars
+                </a>
+            </div>
         </div>
         {% if active_rentals %}
             <div class="table-responsive">
@@ -104,6 +109,7 @@
                             <th>Vehicle</th>
                             <th>Daily Earning</th>
                             <th>Days Remaining</th>
+                            <th>Days Elapsed</th>
                             <th>Total Earned</th>
                             <th>Status</th>
                         </tr>
@@ -111,15 +117,52 @@
                     <tbody>
                         {% for rental in active_rentals %}
                         <tr>
-                            <td>{{ rental.vehicle.name }}</td>
-                            <td>KSH {{ "%.2f"|format(rental.daily_earning) }}</td>
-                            <td>{{ rental.days_remaining() }}</td>
-                            <td>KSH {{ "%.2f"|format(rental.total_earned) }}</td>
-                            <td><span class="badge bg-success">Active</span></td>
+                            <td>
+                                <span class="fw-bold">{{ rental.vehicle.name }}</span>
+                                <br>
+                                <small class="text-muted-custom">{{ rental.vehicle.brand }}</small>
+                            </td>
+                            <td class="gold fw-bold">KSH {{ "%.2f"|format(rental.daily_earning) }}</td>
+                            <td>{{ rental.days_remaining() }} days</td>
+                            <td>{{ rental.days_elapsed }}/{{ rental.vehicle.rental_period }}</td>
+                            <td class="text-success fw-bold">KSH {{ "%.2f"|format(rental.total_earned or 0) }}</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> Active
+                                </span>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+            
+            <!-- Rental Summary -->
+            <div class="row g-3 mt-3">
+                <div class="col-md-3">
+                    <div class="summary-item">
+                        <div class="text-muted-custom small">Total Investment</div>
+                        <div class="fw-bold">KSH {{ "%.2f"|format(total_investment or 0) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-item">
+                        <div class="text-muted-custom small">Total Earned</div>
+                        <div class="fw-bold text-success">KSH {{ "%.2f"|format(total_earned or 0) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-item">
+                        <div class="text-muted-custom small">Daily Earnings</div>
+                        <div class="fw-bold text-gold">KSH {{ "%.2f"|format(daily_earnings_total or 0) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-item">
+                        <div class="text-muted-custom small">Net Profit</div>
+                        <div class="fw-bold text-gold">KSH {{ "%.2f"|format(net_profit or 0) }}</div>
+                    </div>
+                </div>
             </div>
         {% else %}
             <p class="text-center text-muted-custom mb-0">
@@ -136,7 +179,7 @@
         </div>
         {% if recent_transactions %}
             <div class="list-group list-group-flush">
-                {% for txn in recent_transactions %}
+                {% for txn in recent_transactions[:10] %}
                 <div class="list-group-item bg-transparent text-white border-secondary">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -149,7 +192,7 @@
                             <span class="text-{{ 'success' if txn.amount > 0 else 'danger' }}">
                                 {{ '+' if txn.amount > 0 else '' }}KSH {{ "%.2f"|format(txn.amount) }}
                             </span>
-                            <span class="text-muted-custom small ms-2">{{ txn.created_at.strftime('%H:%M') }}</span>
+                            <span class="text-muted-custom small ms-2">{{ txn.created_at.strftime('%d/%m %H:%M') }}</span>
                         </div>
                     </div>
                 </div>
@@ -160,4 +203,28 @@
         {% endif %}
     </div>
 </div>
+
+<style>
+    .summary-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        text-align: center;
+    }
+    .text-gold {
+        color: var(--gold) !important;
+    }
+    .stat-card .number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--gold);
+    }
+    .stat-card .label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
 {% endblock %}
