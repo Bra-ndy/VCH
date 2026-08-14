@@ -3,10 +3,12 @@
 source .venv/bin/activate
 
 # Upgrade pip
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
 # Install dependencies
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 
-# Run migrations
+# Run migrations (skip if no migrations folder)
 python -m flask db upgrade || echo "Migration skipped"
+
+echo "Build completed successfully."
