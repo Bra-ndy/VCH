@@ -334,90 +334,54 @@ def create_app(config_name='development'):
             app.logger.error(f'❌ Error creating admin user: {str(e)}')
         
         # =============================================
-        # VEHICLE SEEDING WITH IMAGES
+        # VEHICLE SEEDING WITH UPDATED PRICING
         # =============================================
         try:
             vehicle_count = Vehicle.query.count()
             
+            # Updated vehicle data with new pricing
+            vehicles_data = [
+                {'name': 'Toyota', 'brand': 'Toyota', 'image': 'toyota.jpg', 'rental_price': 2500, 'daily_earning': 100, 'rental_period': 60, 'sort_order': 8, 'is_active': True, 'is_available': True},
+                {'name': 'Mazda', 'brand': 'Mazda', 'image': 'mazda.jpg', 'rental_price': 4800, 'daily_earning': 180, 'rental_period': 90, 'sort_order': 7, 'is_active': True, 'is_available': True},
+                {'name': 'Isuzu', 'brand': 'Isuzu', 'image': 'isuzu.jpg', 'rental_price': 6800, 'daily_earning': 250, 'rental_period': 120, 'sort_order': 6, 'is_active': True, 'is_available': True},
+                {'name': 'BMW', 'brand': 'BMW', 'image': 'bmw.jpg', 'rental_price': 9000, 'daily_earning': 270, 'rental_period': 150, 'sort_order': 5, 'is_active': True, 'is_available': True},
+                {'name': 'Mercedes-Benz', 'brand': 'Mercedes-Benz', 'image': 'mercedes.jpg', 'rental_price': 12000, 'daily_earning': 320, 'rental_period': 170, 'sort_order': 4, 'is_active': True, 'is_available': True},
+                {'name': 'Jaguar', 'brand': 'Jaguar', 'image': 'jaguar.jpg', 'rental_price': 15000, 'daily_earning': 450, 'rental_period': 180, 'sort_order': 3, 'is_active': True, 'is_available': True},
+                {'name': 'Porsche', 'brand': 'Porsche', 'image': 'porsche.jpg', 'rental_price': 18000, 'daily_earning': 500, 'rental_period': 190, 'sort_order': 2, 'is_active': True, 'is_available': True},
+                {'name': 'Ferrari', 'brand': 'Ferrari', 'image': 'ferrari.jpg', 'rental_price': 22000, 'daily_earning': 700, 'rental_period': 200, 'sort_order': 1, 'is_active': True, 'is_available': True}
+            ]
+            
             if vehicle_count == 0:
-                # Seed all vehicles with images
-                vehicles_data = [
-                    {'name': 'Ferrari', 'brand': 'Ferrari', 'image': 'ferrari.jpg', 'rental_price': 10000, 'daily_earning': 500, 'rental_period': 30, 'sort_order': 1, 'is_active': True, 'is_available': True},
-                    {'name': 'Porsche', 'brand': 'Porsche', 'image': 'porsche.jpg', 'rental_price': 8000, 'daily_earning': 400, 'rental_period': 30, 'sort_order': 2, 'is_active': True, 'is_available': True},
-                    {'name': 'Jaguar', 'brand': 'Jaguar', 'image': 'jaguar.jpg', 'rental_price': 7000, 'daily_earning': 350, 'rental_period': 30, 'sort_order': 3, 'is_active': True, 'is_available': True},
-                    {'name': 'Mercedes-Benz', 'brand': 'Mercedes-Benz', 'image': 'mercedes.jpg', 'rental_price': 5500, 'daily_earning': 290, 'rental_period': 30, 'sort_order': 4, 'is_active': True, 'is_available': True},
-                    {'name': 'BMW', 'brand': 'BMW', 'image': 'bmw.jpg', 'rental_price': 4000, 'daily_earning': 230, 'rental_period': 30, 'sort_order': 5, 'is_active': True, 'is_available': True},
-                    {'name': 'Isuzu', 'brand': 'Isuzu', 'image': 'isuzu.jpg', 'rental_price': 3500, 'daily_earning': 200, 'rental_period': 30, 'sort_order': 6, 'is_active': True, 'is_available': True},
-                    {'name': 'Mazda', 'brand': 'Mazda', 'image': 'mazda.jpg', 'rental_price': 3000, 'daily_earning': 170, 'rental_period': 30, 'sort_order': 7, 'is_active': True, 'is_available': True},
-                    {'name': 'Toyota', 'brand': 'Toyota', 'image': 'toyota.jpg', 'rental_price': 2500, 'daily_earning': 150, 'rental_period': 30, 'sort_order': 8, 'is_active': True, 'is_available': True}
-                ]
-                
+                # Seed all vehicles with new pricing
                 for v in vehicles_data:
                     vehicle = Vehicle(**v)
                     db.session.add(vehicle)
                 db.session.commit()
-                app.logger.info('✅ 8 Vehicles seeded successfully with images!')
-            
+                app.logger.info('✅ 8 Vehicles seeded successfully with updated pricing!')
             else:
-                # Update existing vehicles with images if they don't have them
-                vehicles_with_images = {
-                    'Ferrari': 'ferrari.jpg',
-                    'Porsche': 'porsche.jpg',
-                    'Jaguar': 'jaguar.jpg',
-                    'Mercedes-Benz': 'mercedes.jpg',
-                    'BMW': 'bmw.jpg',
-                    'Isuzu': 'isuzu.jpg',
-                    'Mazda': 'mazda.jpg',
-                    'Toyota': 'toyota.jpg'
-                }
-                
-                updated = 0
-                missing = []
-                
-                for name, image in vehicles_with_images.items():
-                    vehicle = Vehicle.query.filter_by(name=name).first()
+                # Update existing vehicles with new pricing
+                for data in vehicles_data:
+                    vehicle = Vehicle.query.filter_by(name=data['name']).first()
                     if vehicle:
+                        vehicle.rental_price = data['rental_price']
+                        vehicle.daily_earning = data['daily_earning']
+                        vehicle.rental_period = data['rental_period']
+                        vehicle.sort_order = data['sort_order']
+                        vehicle.total_profit = (data['daily_earning'] * data['rental_period']) - data['rental_price']
+                        vehicle.is_active = True
+                        vehicle.is_available = True
+                        # Update image if missing
                         if not vehicle.image:
-                            vehicle.image = image
-                            updated += 1
-                            app.logger.info(f'✅ Updated {name} with image: {image}')
+                            vehicle.image = data['image']
+                        app.logger.info(f'✅ Updated {data["name"]}: Price={data["rental_price"]}, Daily={data["daily_earning"]}, Days={data["rental_period"]}')
                     else:
-                        missing.append(name)
-                
-                # Add any missing vehicles
-                vehicle_data_map = {
-                    'Ferrari': {'brand': 'Ferrari', 'image': 'ferrari.jpg', 'rental_price': 10000, 'daily_earning': 500, 'rental_period': 30, 'sort_order': 1},
-                    'Porsche': {'brand': 'Porsche', 'image': 'porsche.jpg', 'rental_price': 8000, 'daily_earning': 400, 'rental_period': 30, 'sort_order': 2},
-                    'Jaguar': {'brand': 'Jaguar', 'image': 'jaguar.jpg', 'rental_price': 7000, 'daily_earning': 350, 'rental_period': 30, 'sort_order': 3},
-                    'Mercedes-Benz': {'brand': 'Mercedes-Benz', 'image': 'mercedes.jpg', 'rental_price': 5500, 'daily_earning': 290, 'rental_period': 30, 'sort_order': 4},
-                    'BMW': {'brand': 'BMW', 'image': 'bmw.jpg', 'rental_price': 4000, 'daily_earning': 230, 'rental_period': 30, 'sort_order': 5},
-                    'Isuzu': {'brand': 'Isuzu', 'image': 'isuzu.jpg', 'rental_price': 3500, 'daily_earning': 200, 'rental_period': 30, 'sort_order': 6},
-                    'Mazda': {'brand': 'Mazda', 'image': 'mazda.jpg', 'rental_price': 3000, 'daily_earning': 170, 'rental_period': 30, 'sort_order': 7},
-                    'Toyota': {'brand': 'Toyota', 'image': 'toyota.jpg', 'rental_price': 2500, 'daily_earning': 150, 'rental_period': 30, 'sort_order': 8}
-                }
-                
-                for name in missing:
-                    data = vehicle_data_map.get(name)
-                    if data:
-                        vehicle = Vehicle(
-                            name=name,
-                            brand=data['brand'],
-                            image=data['image'],
-                            rental_price=data['rental_price'],
-                            daily_earning=data['daily_earning'],
-                            rental_period=data['rental_period'],
-                            sort_order=data['sort_order'],
-                            is_active=True,
-                            is_available=True
-                        )
+                        # Create vehicle if it doesn't exist
+                        vehicle = Vehicle(**data)
                         db.session.add(vehicle)
-                        app.logger.info(f'✅ Added missing vehicle: {name}')
+                        app.logger.info(f'✅ Created missing vehicle: {data["name"]}')
                 
-                if updated > 0 or len(missing) > 0:
-                    db.session.commit()
-                    app.logger.info(f'✅ Updated {updated} vehicles with images, added {len(missing)} missing vehicles')
-                else:
-                    app.logger.info(f'✅ All {vehicle_count} vehicles already have images')
+                db.session.commit()
+                app.logger.info('✅ All vehicles updated with new pricing!')
                     
         except Exception as e:
             app.logger.error(f'❌ Error seeding vehicles: {str(e)}')

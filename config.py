@@ -140,9 +140,11 @@ class Config:
     REFERRAL_COMMISSION_PERCENTAGE = 2  # 2% daily commission on feed income
     
     # =============================================
-    # RENTAL SETTINGS
+    # RENTAL SETTINGS - Updated with new pricing
     # =============================================
     DAILY_EARNING_RATE = 0.05
+    MINIMUM_RENTAL_DAYS = 60           # New minimum rental period
+    MAXIMUM_RENTAL_DAYS = 200          # New maximum rental period
     
     # =============================================
     # SERVICING SETTINGS

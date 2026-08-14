@@ -35,7 +35,7 @@
                     <div class="text-muted-custom small">Luxury Cars</div>
                 </div>
                 <div>
-                    <div class="h4 gold">KSH 150-500</div>
+                    <div class="h4 gold">KSH 100-700</div>
                     <div class="text-muted-custom small">Daily Earnings</div>
                 </div>
                 <div>
@@ -57,7 +57,7 @@
                     <div class="card-dark text-center">
                         <i class="fas fa-wrench" style="font-size: 2.5rem; color: var(--gold);"></i>
                         <h5 class="mt-2">Daily Servicing</h5>
-                        <p class="text-muted-custom small">Earn KSH 50 per day</p>
+                        <p class="text-muted-custom small">Earn KSH 5 per day</p>
                     </div>
                 </div>
                 <div class="col-6">
@@ -82,14 +82,14 @@
     <h2 class="text-center mt-5 mb-4">Available <span class="gold">Cars</span></h2>
     <div class="row g-3">
         {% set cars = [
-            {'name': 'Ferrari', 'image': 'ferrari.jpg', 'daily': '500', 'price': '10,000'},
-            {'name': 'Porsche', 'image': 'porsche.jpg', 'daily': '400', 'price': '8,000'},
-            {'name': 'Jaguar', 'image': 'jaguar.jpg', 'daily': '350', 'price': '7,000'},
-            {'name': 'Mercedes', 'image': 'mercedes.jpg', 'daily': '290', 'price': '5,500'},
-            {'name': 'BMW', 'image': 'bmw.jpg', 'daily': '230', 'price': '4,000'},
-            {'name': 'Isuzu', 'image': 'isuzu.jpg', 'daily': '200', 'price': '3,500'},
-            {'name': 'Mazda', 'image': 'mazda.jpg', 'daily': '170', 'price': '3,000'},
-            {'name': 'Toyota', 'image': 'toyota.jpg', 'daily': '150', 'price': '2,500'}
+            {'name': 'Toyota', 'image': 'toyota.jpg', 'daily': '100', 'price': '2,500', 'period': '60'},
+            {'name': 'Mazda', 'image': 'mazda.jpg', 'daily': '180', 'price': '4,800', 'period': '90'},
+            {'name': 'Isuzu', 'image': 'isuzu.jpg', 'daily': '250', 'price': '6,800', 'period': '120'},
+            {'name': 'BMW', 'image': 'bmw.jpg', 'daily': '270', 'price': '9,000', 'period': '150'},
+            {'name': 'Mercedes', 'image': 'mercedes.jpg', 'daily': '320', 'price': '12,000', 'period': '170'},
+            {'name': 'Jaguar', 'image': 'jaguar.jpg', 'daily': '450', 'price': '15,000', 'period': '180'},
+            {'name': 'Porsche', 'image': 'porsche.jpg', 'daily': '500', 'price': '18,000', 'period': '190'},
+            {'name': 'Ferrari', 'image': 'ferrari.jpg', 'daily': '700', 'price': '22,000', 'period': '200'}
         ] %}
         
         {% for car in cars %}
@@ -108,7 +108,7 @@
                 </div>
                 <h6 class="mt-1">{{ car.name }}</h6>
                 <div class="gold fw-bold">KSH {{ car.daily }}/day</div>
-                <small class="text-muted-custom">KSH {{ car.price }} · 30d</small>
+                <small class="text-muted-custom">KSH {{ car.price }} · {{ car.period }}d</small>
             </div>
         </div>
         {% endfor %}

@@ -44,8 +44,12 @@
                             <div class="text-muted-custom small">Rental Price</div>
                             <div class="fw-bold">KSH {{ "%.2f"|format(vehicle.rental_price) }}</div>
                         </div>
-                        <div class="col-12 mt-1">
-                            <div class="text-muted-custom small">Total Profit (30 days)</div>
+                        <div class="col-6">
+                            <div class="text-muted-custom small">Rental Period</div>
+                            <div class="fw-bold">{{ vehicle.rental_period }} days</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted-custom small">Total Profit</div>
                             <div class="text-success fw-bold">KSH {{ "%.2f"|format(vehicle.total_profit) }}</div>
                         </div>
                     </div>
