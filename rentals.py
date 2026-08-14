@@ -29,16 +29,26 @@ def rent(vehicle_id):
     form = CarRentalForm()
     form.vehicle_id.data = vehicle_id
     
-    if form.validate_on_submit():
+    # Handle POST request directly
+    if request.method == 'POST':
+        # Get rental_period from form data
+        rental_period = request.form.get('rental_period', type=int)
+        
+        # If rental_period is not provided, use the vehicle's default
+        if not rental_period:
+            rental_period = vehicle.rental_period
+        
+        # Check if user has enough balance
         if current_user.balance < vehicle.rental_price:
             flash(f'Insufficient balance. You need KSH {vehicle.rental_price:,.2f}', 'danger')
             return render_template('rentals/rent.html', vehicle=vehicle, form=form)
         
         try:
+            # Process the rental
             rental = process_rental(
                 user_id=current_user.id,
                 vehicle_id=vehicle_id,
-                rental_period=form.rental_period.data
+                rental_period=rental_period
             )
             
             # Check if this is the user's first rental and process referral bonus
