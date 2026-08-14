@@ -312,7 +312,7 @@ def create_app(config_name='development'):
     # =============================================
     # CRON JOB ENDPOINT (for daily earnings)
     # =============================================
-    @app.route('/cron/daily-earnings', methods=['GET'])
+    @app.route('/cron/daily-earnings', methods=['GET', 'POST'])
     def cron_daily_earnings():
         """Cron endpoint for daily earnings"""
         try:
@@ -328,6 +328,34 @@ def create_app(config_name='development'):
                 'status': 'error', 
                 'message': str(e)
             }), 500
+    
+    # =============================================
+    # ADMIN CRON TRIGGER (Manual run from browser)
+    # =============================================
+    @app.route('/admin/run-cron')
+    @login_required
+    def admin_run_cron():
+        """Admin endpoint to manually trigger daily earnings"""
+        # Check if user is admin
+        is_admin = (
+            current_user.email == 'admin@vch.com' or 
+            current_user.agent_level == 'level2' or
+            current_user.id == 1 or
+            current_user.username == 'admin'
+        )
+        
+        if not is_admin:
+            flash('Unauthorized access', 'danger')
+            return redirect(url_for('dashboard'))
+        
+        try:
+            from cron_jobs import process_daily_earnings
+            process_daily_earnings()
+            flash('✅ Daily earnings processed successfully!', 'success')
+        except Exception as e:
+            flash(f'❌ Error: {str(e)}', 'danger')
+        
+        return redirect(url_for('admin.dashboard'))
     
     # =============================================
     # DATABASE INITIALIZATION AND SEEDING
