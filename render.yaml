@@ -22,11 +22,3 @@ services:
         value: 0753796259 
     healthCheckPath: /health 
     autoDeploy: true
-
-  - type: postgres
-    name: vch-production-db 
-    region: oregon 
-    database: vch_production 
-    user: vch_prod_user 
-    plan: free  # ← Change from "pro" to "free"
-    diskSizeGB: 1  # ← Free plan uses 1GB
