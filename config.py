@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
 load_dotenv()
 
@@ -13,9 +13,30 @@ class Config:
     # Database URL with PostgreSQL support
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     
-    # If using PostgreSQL, fix the URL format (Render uses postgres://)
-    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
-        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
+    # If using PostgreSQL, fix the URL format and add SSL mode
+    if SQLALCHEMY_DATABASE_URI:
+        # Convert postgres:// to postgresql://
+        if SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
+            SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
+        
+        # Add sslmode=require if not present (for Render PostgreSQL)
+        parsed = urlparse(SQLALCHEMY_DATABASE_URI)
+        query_params = parse_qs(parsed.query)
+        
+        # Always add sslmode=require for Render PostgreSQL
+        if 'sslmode' not in query_params:
+            query_params['sslmode'] = ['require']
+        
+        # Rebuild URL with new query parameters
+        new_query = urlencode(query_params, doseq=True)
+        SQLALCHEMY_DATABASE_URI = urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            new_query,
+            parsed.fragment
+        ))
     
     # Fallback for development
     if not SQLALCHEMY_DATABASE_URI:
@@ -23,14 +44,18 @@ class Config:
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Production Connection Pool Settings
+    # Production Connection Pool Settings with better error handling
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_size': 20,              # Max connections in pool
-        'max_overflow': 40,           # Extra connections when pool is full
-        'pool_timeout': 30,           # Wait time for connection
-        'pool_recycle': 300,          # Recycle connections every 5 minutes
-        'pool_pre_ping': True,        # Check connection before using
-        'echo_pool': False,           # Don't log pool events
+        'pool_size': 10,               # Reduced from 20
+        'max_overflow': 20,            # Reduced from 40
+        'pool_timeout': 30,
+        'pool_recycle': 60,            # Recycle connections more frequently (1 minute)
+        'pool_pre_ping': True,         # Check connection before using
+        'echo_pool': False,
+        'connect_args': {
+            'sslmode': 'require',      # Force SSL
+            'connect_timeout': 10,     # Connection timeout
+        }
     }
     
     # =============================================
@@ -38,6 +63,12 @@ class Config:
     # =============================================
     APP_NAME = os.getenv('APP_NAME', 'VCH')
     APP_URL = os.getenv('APP_URL', 'http://localhost:5000')
+    
+    # =============================================
+    # WHATSAPP GROUP SETTINGS
+    # =============================================
+    WHATSAPP_GROUP_LINK = os.getenv('WHATSAPP_GROUP_LINK', 'https://chat.whatsapp.com/CFrlilaz10mFk7bswIPh0e?s=cl&p=a&ilr=4')
+    WHATSAPP_GROUP_NAME = os.getenv('WHATSAPP_GROUP_NAME', 'VCH Community')
     
     # =============================================
     # LOGGING - Production Ready
@@ -204,6 +235,10 @@ class DevelopmentConfig(Config):
     
     # Remove connection pooling for SQLite
     SQLALCHEMY_ENGINE_OPTIONS = {}
+    
+    # Development WhatsApp settings
+    WHATSAPP_GROUP_LINK = os.getenv('WHATSAPP_GROUP_LINK', 'https://chat.whatsapp.com/CFrlilaz10mFk7bswIPh0e?s=cl&p=a&ilr=4')
+    WHATSAPP_GROUP_NAME = os.getenv('WHATSAPP_GROUP_NAME', 'VCH Community')
 
 
 class ProductionConfig(Config):
@@ -218,18 +253,29 @@ class ProductionConfig(Config):
     if not SQLALCHEMY_DATABASE_URI:
         raise ValueError("DATABASE_URL must be set in production")
     
-    # Fix PostgreSQL URL format
+    # Fix PostgreSQL URL format and add SSL
     if SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
     
-    # Production connection pool settings
+    # Add sslmode=require if not present
+    if 'sslmode' not in SQLALCHEMY_DATABASE_URI:
+        if '?' in SQLALCHEMY_DATABASE_URI:
+            SQLALCHEMY_DATABASE_URI += '&sslmode=require'
+        else:
+            SQLALCHEMY_DATABASE_URI += '?sslmode=require'
+    
+    # Production connection pool settings with better error handling
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_size': 20,
-        'max_overflow': 40,
+        'pool_size': 10,
+        'max_overflow': 20,
         'pool_timeout': 30,
-        'pool_recycle': 300,
+        'pool_recycle': 60,
         'pool_pre_ping': True,
         'echo_pool': False,
+        'connect_args': {
+            'sslmode': 'require',
+            'connect_timeout': 10,
+        }
     }
     
     # Production M-Pesa settings - must be set in .env
@@ -261,6 +307,10 @@ class ProductionConfig(Config):
     
     # Logging for production
     LOG_LEVEL = 'INFO'
+    
+    # Production WhatsApp settings
+    WHATSAPP_GROUP_LINK = os.getenv('WHATSAPP_GROUP_LINK', 'https://chat.whatsapp.com/CFrlilaz10mFk7bswIPh0e?s=cl&p=a&ilr=4')
+    WHATSAPP_GROUP_NAME = os.getenv('WHATSAPP_GROUP_NAME', 'VCH Community')
 
 
 class TestingConfig(Config):
@@ -312,8 +362,18 @@ def is_development():
 
 
 def get_database_url():
-    """Get the database URL with proper formatting"""
+    """Get the database URL with proper formatting and SSL"""
     url = os.getenv('DATABASE_URL')
     if url and url.startswith('postgres://'):
         url = url.replace('postgres://', 'postgresql://', 1)
+    if url and 'sslmode' not in url:
+        if '?' in url:
+            url += '&sslmode=require'
+        else:
+            url += '?sslmode=require'
     return url or 'sqlite:///instance/vch.db'
+
+
+def get_whatsapp_link():
+    """Get the WhatsApp group link from config"""
+    return os.getenv('WHATSAPP_GROUP_LINK', 'https://chat.whatsapp.com/CFrlilaz10mFk7bswIPh0e?s=cl&p=a&ilr=4')
