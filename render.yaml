@@ -12,8 +12,6 @@ services:
         value: 3.11.0 
       - key: SECRET_KEY 
         generateValue: true 
-      - key: DATABASE_URL 
-        value: postgresql://vch_prod_user:password@localhost:5432/vch_production  # Placeholder
       - key: ADMIN_NAME 
         value: WINNY LANGAT 
       - key: ADMIN_MPESA_NUMBER 
