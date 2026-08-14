@@ -119,7 +119,7 @@ def create_app(config_name='development'):
         return render_template('index.html', vehicles=vehicles)
     
     # =============================================
-    # USER DASHBOARD
+    # USER DASHBOARD - Updated with rental summary
     # =============================================
     @app.route('/dashboard')
     @login_required
@@ -135,10 +135,24 @@ def create_app(config_name='development'):
         if is_admin:
             return redirect(url_for('admin.dashboard'))
         
-        active_rentals = Rental.query.filter_by(user_id=current_user.id, status='active').all()
-        recent_transactions = Transaction.query.filter_by(user_id=current_user.id)\
-            .order_by(Transaction.created_at.desc()).limit(10).all()
+        # Get active rentals
+        active_rentals = Rental.query.filter_by(
+            user_id=current_user.id, 
+            status='active'
+        ).all()
         
+        # Calculate rental summary
+        total_investment = sum(r.amount for r in active_rentals)
+        total_earned = sum(r.total_earned or 0 for r in active_rentals)
+        daily_earnings_total = sum(r.daily_earning for r in active_rentals)
+        net_profit = total_earned - total_investment
+        
+        # Get recent transactions
+        recent_transactions = Transaction.query.filter_by(
+            user_id=current_user.id
+        ).order_by(Transaction.created_at.desc()).limit(10).all()
+        
+        # Get today's earnings
         today = datetime.now(timezone.utc).date()
         today_earnings = Transaction.query.filter(
             Transaction.user_id == current_user.id,
@@ -149,11 +163,17 @@ def create_app(config_name='development'):
         
         referral_count = User.query.filter_by(referred_by=current_user.id).count()
         
-        return render_template('dashboard/dashboard.html',
-                             active_rentals=active_rentals,
-                             recent_transactions=recent_transactions,
-                             today_earnings_total=today_earnings_total,
-                             referral_count=referral_count)
+        return render_template(
+            'dashboard/dashboard.html',
+            active_rentals=active_rentals,
+            recent_transactions=recent_transactions,
+            today_earnings_total=today_earnings_total,
+            referral_count=referral_count,
+            total_investment=total_investment,
+            total_earned=total_earned,
+            daily_earnings_total=daily_earnings_total,
+            net_profit=net_profit
+        )
     
     # =============================================
     # STATIC PAGES
@@ -288,6 +308,26 @@ def create_app(config_name='development'):
             }
             return jsonify(env_vars)
         return jsonify({'error': 'Not available in production'}), 403
+    
+    # =============================================
+    # CRON JOB ENDPOINT (for daily earnings)
+    # =============================================
+    @app.route('/cron/daily-earnings', methods=['GET'])
+    def cron_daily_earnings():
+        """Cron endpoint for daily earnings"""
+        try:
+            from cron_jobs import process_daily_earnings
+            process_daily_earnings()
+            return jsonify({
+                'status': 'success', 
+                'message': 'Daily earnings processed successfully'
+            }), 200
+        except Exception as e:
+            app.logger.error(f'Cron job failed: {str(e)}')
+            return jsonify({
+                'status': 'error', 
+                'message': str(e)
+            }), 500
     
     # =============================================
     # DATABASE INITIALIZATION AND SEEDING
