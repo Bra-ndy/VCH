@@ -23,7 +23,7 @@ services:
     healthCheckPath: /health 
     autoDeploy: true
 
-  - type: database  # ← Changed from "postgresql" to "database"
+  - type: postgres
     name: vch-production-db 
     region: oregon 
     database: vch_production 
