@@ -11,10 +11,28 @@
         </ol>
     </nav>
     
-    <h2><i class="fas fa-arrow-up-right gold"></i> Withdraw Funds</h2>
+    <h2><i class="fas fa-arrow-up-right-from-square gold"></i> Withdraw Funds</h2>
     <p class="text-muted-custom">Request a withdrawal from your wallet</p>
     
+    <!-- Status Alert -->
+    {% if not can_withdraw_now %}
+    <div class="alert alert-warning">
+        <i class="fas fa-clock me-2"></i>
+        <strong>{{ message }}</strong>
+        <br>
+        <small>Next available: <span class="fw-bold">{{ next_available }}</span></small>
+    </div>
+    {% else %}
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>Withdrawals are now available!</strong>
+        <br>
+        <small>Business hours: 9:00 AM - 6:00 PM (Monday - Friday, EAT)</small>
+    </div>
+    {% endif %}
+    
     <div class="row">
+        <!-- Withdrawal Form -->
         <div class="col-md-6">
             <div class="card-dark">
                 <div class="text-center mb-4">
@@ -22,15 +40,14 @@
                     <div class="display-6 gold">KSH {{ "%.2f"|format(current_user.balance or 0) }}</div>
                 </div>
                 
-                <!-- Withdrawal Request Form -->
-                <form method="POST" action="{{ url_for('wallet.withdraw') }}" id="withdrawForm">
+                <form method="POST" action="{{ url_for('withdrawals.request_withdrawal') }}" id="withdrawForm">
                     {{ form.hidden_tag() if form else '' }}
                     
                     <div class="mb-3">
                         <label class="form-label">Amount (KSH)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-dark text-white border-secondary">KSH</span>
-                            <input type="number" name="amount" class="form-control" placeholder="Enter amount" min="100" step="1" required>
+                            <input type="number" name="amount" id="amountInput" class="form-control" placeholder="Enter amount" min="100" step="1" required>
                         </div>
                         <small class="text-muted-custom">Minimum: KSH 100 | Maximum: KSH 50,000</small>
                     </div>
@@ -53,54 +70,52 @@
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn-gold w-100" id="submitBtn">
-                        <i class="fas fa-paper-plane"></i> Submit Withdrawal Request
+                    <button type="submit" class="btn-gold w-100" id="submitBtn" {% if not can_withdraw_now %}disabled{% endif %}>
+                        <i class="fas fa-{{ 'paper-plane' if can_withdraw_now else 'clock' }}"></i>
+                        {% if can_withdraw_now %}
+                            Submit Withdrawal Request
+                        {% else %}
+                            Withdrawals Unavailable
+                        {% endif %}
                     </button>
                 </form>
-                
-                <div class="alert alert-info mt-3">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>How It Works:</strong>
-                    <ol class="mb-0 mt-2 text-muted-custom small">
-                        <li>Submit your withdrawal request</li>
-                        <li>Admin will review and process your request</li>
-                        <li>You'll receive a notification when processed</li>
-                        <li>Funds will be sent to your M-Pesa</li>
-                    </ol>
-                </div>
-            </div>
-            
-            <div class="card-dark mt-3">
-                <h6><i class="fas fa-info-circle gold"></i> Withdrawal Information</h6>
-                <ul class="text-muted-custom small mb-0">
-                    <li>Withdrawals are processed by admin within 24 hours</li>
-                    <li>Minimum withdrawal: KSH 100</li>
-                    <li>Maximum withdrawal: KSH 50,000 per request</li>
-                    <li>Funds are sent to your M-Pesa account</li>
-                    <li>You'll receive an SMS confirmation when processed</li>
-                </ul>
             </div>
         </div>
         
+        <!-- Information Sidebar -->
         <div class="col-md-6">
-            <div class="card-dark">
-                <h6><i class="fas fa-clock gold"></i> Processing Time</h6>
+            <div class="card-dark mb-3">
+                <h6><i class="fas fa-clock gold"></i> Business Hours</h6>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted-custom">Monday - Friday</span>
+                    <span class="fw-bold">9:00 AM - 6:00 PM</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted-custom">Saturday - Sunday</span>
+                    <span class="fw-bold text-danger">Closed</span>
+                </div>
+            </div>
+            
+            <div class="card-dark mb-3">
+                <h6><i class="fas fa-info-circle gold"></i> How It Works</h6>
+                <ol class="text-muted-custom small mb-0">
+                    <li>Submit your withdrawal request</li>
+                    <li>Admin will review and process your request</li>
+                    <li>You'll receive a notification when processed</li>
+                    <li>Funds will be sent to your M-Pesa</li>
+                </ol>
+            </div>
+            
+            <div class="card-dark mb-3">
+                <h6><i class="fas fa-shield-alt gold"></i> Processing Time</h6>
                 <ul class="text-muted-custom small mb-0">
                     <li><strong>Admin Verification:</strong> 1-24 hours</li>
                     <li><strong>Weekends:</strong> May take longer</li>
-                    <li><strong>Public Holidays:</strong> Processed next business day</li>
                 </ul>
-                
-                <hr class="border-gold">
-                
-                <h6><i class="fas fa-shield-alt gold"></i> Security</h6>
-                <p class="text-muted-custom small">
-                    All withdrawals are processed securely by our admin team. You will receive a notification once your request is processed.
-                </p>
-                
-                <hr class="border-gold">
-                
-                <h6><i class="fas fa-history gold"></i> Recent Withdrawal Requests</h6>
+            </div>
+            
+            <div class="card-dark">
+                <h6><i class="fas fa-history gold"></i> Recent Withdrawals</h6>
                 <div class="table-responsive">
                     <table class="table table-dark table-hover">
                         <thead>
@@ -112,7 +127,7 @@
                         </thead>
                         <tbody>
                             {% if recent_withdrawals %}
-                                {% for withdrawal in recent_withdrawals %}
+                                {% for withdrawal in recent_withdrawals[:5] %}
                                 <tr>
                                     <td>KSH {{ "%.2f"|format(withdrawal.amount) }}</td>
                                     <td>
@@ -120,7 +135,7 @@
                                             {{ withdrawal.status|title }}
                                         </span>
                                     </td>
-                                    <td>{{ withdrawal.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td class="text-muted-custom">{{ withdrawal.created_at.strftime('%d/%m/%Y') }}</td>
                                 </tr>
                                 {% endfor %}
                             {% else %}
@@ -132,70 +147,67 @@
                     </table>
                 </div>
             </div>
-            
-            <div class="card-dark mt-3">
-                <h6><i class="fas fa-question-circle gold"></i> Need Help?</h6>
-                <p class="text-muted-custom small">
-                    Contact our support team at 
-                    <a href="mailto:support@vch.com" class="text-gold">support@vch.com</a>
-                </p>
-            </div>
         </div>
     </div>
 </div>
 
+<!-- Data attributes for JavaScript -->
+<div id="withdrawData" 
+     data-balance="{{ current_user.balance or 0 }}"
+     data-can-withdraw="{{ 'true' if can_withdraw_now else 'false' }}"
+     data-message="{{ message }}"
+     style="display:none;">
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const amountInput = document.querySelector('input[name="amount"]');
-    const balanceDisplay = document.getElementById('balanceAfter');
-    const currentBalance = parseFloat('{{ current_user.balance or 0 }}') || 0;
-    const submitBtn = document.getElementById('submitBtn');
-    const form = document.getElementById('withdrawForm');
+    var dataDiv = document.getElementById('withdrawData');
+    var currentBalance = parseFloat(dataDiv.getAttribute('data-balance')) || 0;
+    var canWithdraw = dataDiv.getAttribute('data-can-withdraw') === 'true';
+    var unavailableMessage = dataDiv.getAttribute('data-message') || '';
     
-    if (amountInput) {
+    var amountInput = document.getElementById('amountInput');
+    var balanceDisplay = document.getElementById('balanceAfter');
+    var submitBtn = document.getElementById('submitBtn');
+    var form = document.getElementById('withdrawForm');
+    
+    if (amountInput && balanceDisplay) {
         amountInput.addEventListener('input', function() {
-            const amount = parseFloat(this.value) || 0;
-            const newBalance = currentBalance - amount;
+            var amount = parseFloat(this.value) || 0;
+            var newBalance = currentBalance - amount;
             balanceDisplay.textContent = 'KSH ' + newBalance.toFixed(2);
-            
-            if (newBalance < 0) {
-                balanceDisplay.style.color = '#dc3545';
-            } else {
-                balanceDisplay.style.color = '#ffffff';
-            }
         });
     }
     
-    form.addEventListener('submit', function(e) {
-        const amount = parseFloat(amountInput.value) || 0;
-        
-        if (amount < 100) {
-            e.preventDefault();
-            alert('Minimum withdrawal is KSH 100');
-            return false;
-        }
-        
-        if (amount > 50000) {
-            e.preventDefault();
-            alert('Maximum withdrawal is KSH 50,000');
-            return false;
-        }
-        
-        if (amount > currentBalance) {
-            e.preventDefault();
-            alert('Insufficient balance. You have KSH ' + currentBalance.toFixed(2) + ' available.');
-            return false;
-        }
-        
-        // Show loading state
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting Request...';
-        
-        setTimeout(function() {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Withdrawal Request';
-        }, 30000);
-    });
+    if (form && submitBtn) {
+        form.addEventListener('submit', function(e) {
+            if (!canWithdraw) {
+                e.preventDefault();
+                alert(unavailableMessage);
+                return false;
+            }
+            
+            var amount = parseFloat(amountInput.value) || 0;
+            
+            if (amount < 100) {
+                e.preventDefault();
+                alert('Minimum withdrawal is KSH 100');
+                return false;
+            }
+            
+            if (amount > 50000) {
+                e.preventDefault();
+                alert('Maximum withdrawal is KSH 50,000');
+                return false;
+            }
+            
+            if (amount > currentBalance) {
+                e.preventDefault();
+                alert('Insufficient balance. You have KSH ' + currentBalance.toFixed(2) + ' available.');
+                return false;
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

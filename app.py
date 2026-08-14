@@ -358,6 +358,34 @@ def create_app(config_name='development'):
         return redirect(url_for('admin.dashboard'))
     
     # =============================================
+    # ADMIN FIX RENTALS (Fix inconsistent rentals)
+    # =============================================
+    @app.route('/admin/fix-rentals')
+    @login_required
+    def admin_fix_rentals():
+        """Admin endpoint to fix rental inconsistencies"""
+        # Check if user is admin
+        is_admin = (
+            current_user.email == 'admin@vch.com' or 
+            current_user.agent_level == 'level2' or
+            current_user.id == 1 or
+            current_user.username == 'admin'
+        )
+        
+        if not is_admin:
+            flash('Unauthorized access', 'danger')
+            return redirect(url_for('dashboard'))
+        
+        try:
+            from fix_rentals import fix_rentals
+            fix_rentals()
+            flash('✅ Rentals fixed successfully!', 'success')
+        except Exception as e:
+            flash(f'❌ Error: {str(e)}', 'danger')
+        
+        return redirect(url_for('admin.dashboard'))
+    
+    # =============================================
     # DATABASE INITIALIZATION AND SEEDING
     # =============================================
     with app.app_context():
@@ -453,6 +481,18 @@ def create_app(config_name='development'):
                     
         except Exception as e:
             app.logger.error(f'❌ Error seeding vehicles: {str(e)}')
+        
+        # =============================================
+        # FIX EXISTING RENTALS ON STARTUP
+        # =============================================
+        try:
+            from fix_rentals import fix_rentals
+            fix_rentals()
+            app.logger.info('✅ Rental data verified and fixed on startup')
+        except ImportError as e:
+            app.logger.warning(f'⚠️ fix_rentals module not found: {e}')
+        except Exception as e:
+            app.logger.error(f'❌ Error fixing rentals on startup: {str(e)}')
     
     return app
 
