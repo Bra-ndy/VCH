@@ -1,17 +1,17 @@
 # cron_jobs.py
 from app import create_app, db
-from models import Rental, User, Transaction, Notification
-from datetime import datetime, timezone, timedelta
+from models import Rental, Transaction, User, Notification
+from datetime import datetime, timedelta
 import logging
 
-app = create_app()
 logger = logging.getLogger(__name__)
 
-def fix_rentals():
-    """Fix inconsistent rental data (days_elapsed and total_earned)"""
+def process_daily_earnings():
+    """Process daily earnings for all active rentals"""
+    app = create_app()
     with app.app_context():
         try:
-            logger.info("🔧 Fixing rental inconsistencies...")
+            logger.info("🔄 Starting daily earnings processing...")
             
             # Get all active rentals
             rentals = Rental.query.filter_by(status='active').all()
@@ -20,116 +20,121 @@ def fix_rentals():
                 logger.info("ℹ️ No active rentals found")
                 return
             
-            fixed_count = 0
-            completed_count = 0
-            now = datetime.now(timezone.utc)
+            processed = 0
+            today = datetime.utcnow().date()
             
             for rental in rentals:
-                # Make start_date timezone-aware if needed
-                start_date = rental.start_date
-                if start_date.tzinfo is None:
-                    start_date = start_date.replace(tzinfo=timezone.utc)
-                
-                days_since_start = (now - start_date).days
-                
-                if rental.days_elapsed == 0 and days_since_start > 0:
-                    rental.days_elapsed = days_since_start
-                    rental.total_earned = days_since_start * rental.daily_earning
-                    fixed_count += 1
-                    logger.info(f"✅ Fixed {rental.vehicle.name}: days_elapsed={rental.days_elapsed}, total_earned={rental.total_earned:.2f}")
-                
-                if rental.days_elapsed >= rental.vehicle.rental_period:
-                    rental.status = 'completed'
-                    rental.completed_at = datetime.now(timezone.utc)
-                    completed_count += 1
-                    logger.info(f"✅ Completed {rental.vehicle.name}: Period complete after {rental.days_elapsed} days")
-            
-            db.session.commit()
-            logger.info(f"📊 Fix summary: Fixed {fixed_count} rentals, Completed {completed_count} rentals")
-            
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"❌ Error fixing rentals: {str(e)}")
-
-def process_daily_earnings():
-    """Process daily earnings for all active rentals"""
-    with app.app_context():
-        try:
-            logger.info("🔄 Starting daily earnings processing...")
-            
-            # First fix any inconsistencies
-            fix_rentals()
-            
-            # Get all active rentals
-            active_rentals = Rental.query.filter_by(status='active').all()
-            logger.info(f"📊 Found {len(active_rentals)} active rentals")
-            
-            processed_count = 0
-            now = datetime.now(timezone.utc)
-            today = now.date()
-            
-            for rental in active_rentals:
                 # Check if already earned today
                 last_earning = rental.last_earning_date
                 if last_earning and last_earning.date() == today:
-                    continue  # Already earned today
+                    continue
                 
-                # Calculate daily earning
-                daily_amount = rental.daily_earning
+                # Check if rental is expired
+                if rental.is_expired():
+                    rental.status = 'completed'
+                    rental.completed_at = datetime.utcnow()
+                    db.session.add(rental)
+                    continue
                 
-                # Add to user's balance
+                # Calculate earning
+                earning = rental.daily_earning
+                
+                # Update rental
+                rental.days_elapsed += 1
+                rental.total_earned += earning
+                rental.last_earning_date = datetime.utcnow()
+                
+                # Check if rental period is complete
+                if rental.days_elapsed >= rental.rental_period:
+                    rental.status = 'completed'
+                    rental.completed_at = datetime.utcnow()
+                
+                db.session.add(rental)
+                
+                # Create transaction
+                transaction = Transaction(
+                    user_id=rental.user_id,
+                    type='rental_earning',
+                    amount=earning,
+                    fee=0,
+                    net_amount=earning,
+                    description=f'Daily earning from {rental.vehicle.name} rental',
+                    status='completed',
+                    reference=rental.rental_id
+                )
+                db.session.add(transaction)
+                
+                # Update user balance
                 user = User.query.get(rental.user_id)
                 if user:
-                    user.balance += daily_amount
-                    user.total_earned += daily_amount
-                    
-                    # Update rental tracking
-                    rental.days_elapsed += 1
-                    rental.total_earned += daily_amount
-                    rental.last_earning_date = datetime.now(timezone.utc)
-                    
-                    # Create transaction record
-                    transaction = Transaction(
-                        user_id=user.id,
-                        type='rental_earning',
-                        amount=daily_amount,
-                        fee=0,
-                        net_amount=daily_amount,
-                        description=f'Daily rental earning for {rental.vehicle.name}',
-                        status='completed'
-                    )
-                    db.session.add(transaction)
-                    
-                    # Check if rental period is complete
-                    if rental.days_elapsed >= rental.vehicle.rental_period:
-                        rental.status = 'completed'
-                        rental.completed_at = datetime.now(timezone.utc)
-                        
-                        # Create notification
-                        notification = Notification(
-                            user_id=user.id,
-                            title='Rental Completed! 🎉',
-                            message=f'Your {rental.vehicle.name} rental has completed. Total earned: KSH {rental.total_earned:,.2f}',
-                            type='success'
-                        )
-                        db.session.add(notification)
-                        logger.info(f"✅ Completed {rental.vehicle.name} for user {user.username}")
-                    
-                    processed_count += 1
-                    logger.info(f"✅ Processed {rental.vehicle.name}: +KSH {daily_amount:.2f} for user {user.username}")
+                    user.balance += earning
+                    user.total_earned += earning
+                    db.session.add(user)
+                
+                processed += 1
+                logger.info(f"✅ Processed {rental.rental_id}: {rental.vehicle.name} - +KSH {earning:.2f}")
             
+            # Commit all changes
             db.session.commit()
-            logger.info(f"✅ Processed daily earnings for {processed_count} rentals")
+            logger.info(f"✅ Daily earnings processing complete! Processed {processed} rentals")
             
         except Exception as e:
             db.session.rollback()
             logger.error(f"❌ Error processing daily earnings: {str(e)}")
+            raise
 
-def fix_and_process():
-    """Fix existing rentals and process daily earnings"""
+def fix_existing_rentals():
+    """Fix existing rentals that haven't been earning properly"""
+    app = create_app()
     with app.app_context():
-        fix_rentals()
-        process_daily_earnings()
-
-if __name__ == '__main__':
-    fix_and_process()
+        try:
+            logger.info("🔄 Fixing existing rentals...")
+            
+            # Find rentals with 0 days elapsed but should have earnings
+            rentals = Rental.query.filter(
+                Rental.status == 'active',
+                Rental.days_elapsed == 0,
+                Rental.last_earning_date.is_(None)
+            ).all()
+            
+            fixed = 0
+            for rental in rentals:
+                # Calculate days since rental started
+                days_since = (datetime.utcnow() - rental.start_date).days
+                
+                if days_since > 0:
+                    # Update rental
+                    rental.days_elapsed = days_since
+                    rental.total_earned = rental.daily_earning * days_since
+                    rental.last_earning_date = rental.start_date + timedelta(days=days_since - 1)
+                    
+                    # Create transaction for each day
+                    for i in range(days_since):
+                        transaction = Transaction(
+                            user_id=rental.user_id,
+                            type='rental_earning',
+                            amount=rental.daily_earning,
+                            fee=0,
+                            net_amount=rental.daily_earning,
+                            description=f'Back-dated earning from {rental.vehicle.name} rental - Day {i+1}',
+                            status='completed',
+                            reference=rental.rental_id
+                        )
+                        db.session.add(transaction)
+                    
+                    # Update user balance
+                    user = User.query.get(rental.user_id)
+                    if user:
+                        user.balance += rental.total_earned
+                        user.total_earned += rental.total_earned
+                        db.session.add(user)
+                    
+                    fixed += 1
+                    logger.info(f"✅ Fixed {rental.rental_id}: {rental.vehicle.name} - Added {days_since} days, KSH {rental.total_earned:.2f}")
+            
+            db.session.commit()
+            logger.info(f"✅ Fixed {fixed} rentals")
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"❌ Error fixing rentals: {str(e)}")

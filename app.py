@@ -1,4 +1,4 @@
-# app.py - Production ready with PostgreSQL, logging, and health checks
+# app.py - Production ready with PostgreSQL, logging, health checks, and cron jobs
 from flask import Flask, render_template, redirect, url_for, flash, request, session, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -8,7 +8,7 @@ from flask_caching import Cache
 from flask_socketio import SocketIO
 import os
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from logging.handlers import RotatingFileHandler
 
 from config import config
@@ -176,6 +176,155 @@ def create_app(config_name='development'):
         )
     
     # =============================================
+    # TEMPORARY: UPDATE RENTALS ENDPOINT (Remove after use)
+    # =============================================
+    @app.route('/update-rentals')
+    @login_required
+    def update_rentals():
+        """Temporary endpoint to update existing rentals - REMOVE AFTER RUNNING"""
+        # Check if user is admin
+        is_admin = (
+            current_user.email == 'admin@vch.com' or 
+            current_user.agent_level == 'level2' or
+            current_user.id == 1 or
+            current_user.username == 'admin'
+        )
+        
+        if not is_admin:
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        try:
+            # Get rentals that need updating
+            rentals = Rental.query.filter(
+                Rental.rental_period.is_(None)
+            ).all()
+            
+            if not rentals:
+                rentals = Rental.query.filter(
+                    Rental.rental_period == 30
+                ).all()
+            
+            if not rentals:
+                return jsonify({
+                    'success': True,
+                    'message': 'All rentals already have correct periods',
+                    'updated': 0
+                })
+            
+            updated = 0
+            results = []
+            
+            for rental in rentals:
+                vehicle = Vehicle.query.get(rental.vehicle_id)
+                if vehicle:
+                    old_period = rental.rental_period or 30
+                    rental.rental_period = vehicle.rental_period
+                    rental.end_date = rental.start_date + timedelta(days=vehicle.rental_period)
+                    updated += 1
+                    results.append({
+                        'rental_id': rental.rental_id,
+                        'vehicle': vehicle.name,
+                        'old_period': old_period,
+                        'new_period': vehicle.rental_period
+                    })
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'updated': updated,
+                'results': results,
+                'message': f'✅ Updated {updated} rentals with correct periods'
+            })
+            
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    
+    # =============================================
+    # TEMPORARY: FIX TOYOTA RENTAL ENDPOINT (Remove after use)
+    # =============================================
+    @app.route('/fix-toyota-rental')
+    @login_required
+    def fix_toyota_rental():
+        """Temporary endpoint to fix the problematic Toyota rental - REMOVE AFTER RUNNING"""
+        # Check if user is admin
+        is_admin = (
+            current_user.email == 'admin@vch.com' or 
+            current_user.agent_level == 'level2' or
+            current_user.id == 1 or
+            current_user.username == 'admin'
+        )
+        
+        if not is_admin:
+            flash('Unauthorized access', 'danger')
+            return redirect(url_for('dashboard'))
+        
+        try:
+            # Find Toyota vehicle
+            toyota = Vehicle.query.filter_by(name='Toyota').first()
+            if not toyota:
+                flash('❌ Toyota vehicle not found', 'danger')
+                return redirect(url_for('admin.dashboard'))
+            
+            # Find the problematic Toyota rental
+            rental = Rental.query.filter(
+                Rental.vehicle_id == toyota.id,
+                Rental.status == 'active',
+                Rental.total_earned == 0
+            ).first()
+            
+            if not rental:
+                flash('⚠️ No problematic Toyota rental found', 'warning')
+                return redirect(url_for('admin.dashboard'))
+            
+            # Calculate days since start
+            days_since = (datetime.utcnow() - rental.start_date).days
+            
+            if days_since <= 0:
+                flash('⚠️ Rental was started today, no fix needed', 'info')
+                return redirect(url_for('admin.dashboard'))
+            
+            # Fix the rental
+            rental.days_elapsed = days_since
+            rental.total_earned = rental.daily_earning * days_since
+            rental.last_earning_date = datetime.utcnow() - timedelta(days=1)
+            
+            # Add transactions for each day
+            for i in range(days_since):
+                transaction = Transaction(
+                    user_id=rental.user_id,
+                    type='rental_earning',
+                    amount=rental.daily_earning,
+                    fee=0,
+                    net_amount=rental.daily_earning,
+                    description=f'Fixed earning - Day {i+1} from {rental.vehicle.name}',
+                    status='completed',
+                    reference=rental.rental_id
+                )
+                db.session.add(transaction)
+            
+            # Update user balance
+            user = User.query.get(rental.user_id)
+            if user:
+                user.balance += rental.total_earned
+                user.total_earned += rental.total_earned
+                db.session.add(user)
+            
+            db.session.commit()
+            
+            flash(f'✅ Fixed Toyota rental! Now: {rental.days_elapsed} days, KSH {rental.total_earned:.2f} earned', 'success')
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'❌ Error: {str(e)}', 'danger')
+        
+        return redirect(url_for('admin.dashboard'))
+    
+    # =============================================
     # STATIC PAGES
     # =============================================
     @app.route('/about')
@@ -330,6 +479,26 @@ def create_app(config_name='development'):
             }), 500
     
     # =============================================
+    # CRON FIX RENTALS ENDPOINT
+    # =============================================
+    @app.route('/cron/fix-rentals', methods=['GET', 'POST'])
+    def cron_fix_rentals():
+        """Endpoint to fix existing rentals"""
+        try:
+            from cron_jobs import fix_existing_rentals
+            fix_existing_rentals()
+            return jsonify({
+                'status': 'success',
+                'message': 'Rentals fixed successfully'
+            }), 200
+        except Exception as e:
+            app.logger.error(f'Fix rentals failed: {str(e)}')
+            return jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 500
+    
+    # =============================================
     # ADMIN CRON TRIGGER (Manual run from browser)
     # =============================================
     @app.route('/admin/run-cron')
@@ -377,8 +546,8 @@ def create_app(config_name='development'):
             return redirect(url_for('dashboard'))
         
         try:
-            from fix_rentals import fix_rentals
-            fix_rentals()
+            from cron_jobs import fix_existing_rentals
+            fix_existing_rentals()
             flash('✅ Rentals fixed successfully!', 'success')
         except Exception as e:
             flash(f'❌ Error: {str(e)}', 'danger')
@@ -486,11 +655,12 @@ def create_app(config_name='development'):
         # FIX EXISTING RENTALS ON STARTUP
         # =============================================
         try:
-            from fix_rentals import fix_rentals
-            fix_rentals()
+            from cron_jobs import fix_existing_rentals
+            fix_existing_rentals()
             app.logger.info('✅ Rental data verified and fixed on startup')
-        except ImportError as e:
-            app.logger.warning(f'⚠️ fix_rentals module not found: {e}')
+                
+        except ImportError:
+            app.logger.warning('⚠️ cron_jobs module not found, skipping rental fix')
         except Exception as e:
             app.logger.error(f'❌ Error fixing rentals on startup: {str(e)}')
     

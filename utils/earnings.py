@@ -1,10 +1,13 @@
-# utils/earnings.py - Complete version
+# utils/earnings.py - Complete version with rental period support
 from datetime import datetime, timedelta
 from flask import current_app
-from models import db, Rental, Transaction, User, Notification
+from models import db, Rental, Transaction, User, Notification, Vehicle
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Service earning amount
+SERVICE_AMOUNT = 5.0  # KSH 5 per day
 
 def calculate_rental_earning(rental):
     """Calculate daily earning for a rental"""
@@ -28,8 +31,8 @@ def calculate_rental_earning(rental):
         rental.total_earned += earning
         rental.last_earning_date = datetime.utcnow()
         
-        # Check if rental period is complete
-        if rental.days_elapsed >= 30:
+        # Check if rental period is complete (using rental_period)
+        if rental.days_elapsed >= rental.rental_period:
             rental.status = 'completed'
             rental.completed_at = datetime.utcnow()
         
@@ -64,8 +67,8 @@ def calculate_rental_earning(rental):
         db.session.rollback()
         return None
 
-def process_rental(user_id, vehicle_id, rental_period=30):
-    """Process a new rental"""
+def process_rental(user_id, vehicle_id, rental_period=None):
+    """Process a new rental with proper period support"""
     try:
         from models import Vehicle, Rental, User
         
@@ -82,17 +85,25 @@ def process_rental(user_id, vehicle_id, rental_period=30):
         if not user:
             raise ValueError("User not found")
         
+        # Use vehicle's rental period if not provided
+        if not rental_period:
+            rental_period = vehicle.rental_period
+        
         # Check balance
         if user.balance < vehicle.rental_price:
             raise ValueError(f"Insufficient balance. Need KSH {vehicle.rental_price:,.2f}")
         
-        # Create rental
+        # Calculate total profit
+        total_profit = (vehicle.daily_earning * rental_period) - vehicle.rental_price
+        
+        # Create rental with proper period
         rental = Rental(
             user_id=user_id,
             vehicle_id=vehicle_id,
             amount=vehicle.rental_price,
             daily_earning=vehicle.daily_earning,
-            total_profit=vehicle.total_profit if hasattr(vehicle, 'total_profit') else (vehicle.daily_earning * rental_period - vehicle.rental_price),
+            total_profit=total_profit,
+            rental_period=rental_period,  # ← SAVE THE RENTAL PERIOD
             start_date=datetime.utcnow(),
             end_date=datetime.utcnow() + timedelta(days=rental_period)
         )
@@ -101,29 +112,35 @@ def process_rental(user_id, vehicle_id, rental_period=30):
         # Deduct from user balance
         user.balance -= vehicle.rental_price
         
-        # Create transaction
+        # Create transaction for rental purchase
         transaction = Transaction(
             user_id=user_id,
             type='rental_purchase',
             amount=vehicle.rental_price,
             fee=0,
             net_amount=-vehicle.rental_price,
-            description=f'Rented {vehicle.name}',
+            description=f'Rented {vehicle.name} for {rental_period} days',
             status='completed',
             reference=rental.rental_id
         )
         db.session.add(transaction)
         
+        # Mark vehicle as unavailable
+        vehicle.is_available = False
+        db.session.add(vehicle)
+        
         # Create notification
         notification = Notification(
             user_id=user_id,
-            title='Car Rented Successfully',
-            message=f'You have rented {vehicle.name}. You will earn KSH {vehicle.daily_earning:,.2f} per day.',
+            title='Car Rented Successfully 🚗',
+            message=f'You have rented {vehicle.name} for {rental_period} days. You will earn KSH {vehicle.daily_earning:,.2f} per day.',
             type='success'
         )
         db.session.add(notification)
         
         db.session.commit()
+        
+        logger.info(f"✅ Rental created: {rental.rental_id} for {rental_period} days")
         
         return rental
         
@@ -133,7 +150,7 @@ def process_rental(user_id, vehicle_id, rental_period=30):
         raise
 
 def process_service_earning(user_id):
-    """Process daily service earning"""
+    """Process daily service earning (KSH 5 per day)"""
     try:
         from models import ServiceHistory, Transaction, User, Notification
         
@@ -151,7 +168,7 @@ def process_service_earning(user_id):
         service = ServiceHistory(
             user_id=user_id,
             type='daily_servicing',
-            earning=50.0,
+            earning=SERVICE_AMOUNT,
             service_date=datetime.utcnow()
         )
         db.session.add(service)
@@ -160,10 +177,10 @@ def process_service_earning(user_id):
         transaction = Transaction(
             user_id=user_id,
             type='service_earning',
-            amount=50.0,
+            amount=SERVICE_AMOUNT,
             fee=0,
-            net_amount=50.0,
-            description='Daily servicing earning',
+            net_amount=SERVICE_AMOUNT,
+            description=f'Daily servicing earning - KSH {SERVICE_AMOUNT:.2f}',
             status='completed'
         )
         db.session.add(transaction)
@@ -171,8 +188,8 @@ def process_service_earning(user_id):
         # Update user balance
         user = User.query.get(user_id)
         if user:
-            user.balance += 50.0
-            user.total_earned += 50.0
+            user.balance += SERVICE_AMOUNT
+            user.total_earned += SERVICE_AMOUNT
             db.session.add(user)
         
         db.session.commit()
@@ -233,3 +250,34 @@ def process_referral_commission(referrer_id, referred_id, amount):
         logger.error(f"Error processing referral commission: {e}")
         db.session.rollback()
         return None
+
+def get_daily_earnings(user_id):
+    """Get total daily earnings for a user"""
+    try:
+        # Get active rentals
+        rentals = Rental.query.filter_by(user_id=user_id, status='active').all()
+        
+        total_daily = 0
+        for rental in rentals:
+            if rental.status == 'active' and not rental.is_expired():
+                total_daily += rental.daily_earning
+        
+        return total_daily
+        
+    except Exception as e:
+        logger.error(f"Error getting daily earnings: {e}")
+        return 0
+
+def get_total_earnings(user_id):
+    """Get total earnings from all sources for a user"""
+    try:
+        total = db.session.query(db.func.sum(Transaction.amount)).filter(
+            Transaction.user_id == user_id,
+            Transaction.type.in_(['rental_earning', 'service_earning', 'referral_bonus', 'welcome_bonus'])
+        ).scalar() or 0
+        
+        return total
+        
+    except Exception as e:
+        logger.error(f"Error getting total earnings: {e}")
+        return 0

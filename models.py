@@ -112,7 +112,7 @@ class Vehicle(db.Model):
     # Pricing
     rental_price = db.Column(db.Float, nullable=False)  # Total rental cost
     daily_earning = db.Column(db.Float, nullable=False)
-    rental_period = db.Column(db.Integer, default=30)  # Days
+    rental_period = db.Column(db.Integer, default=60)  # Updated default to 60 days
     
     # Profit
     total_profit = db.Column(db.Float)  # Total profit over rental period
@@ -153,6 +153,7 @@ class Rental(db.Model):
     amount = db.Column(db.Float, nullable=False)
     daily_earning = db.Column(db.Float, nullable=False)
     total_profit = db.Column(db.Float, nullable=False)
+    rental_period = db.Column(db.Integer, default=60)  # ✅ ADDED: Store the rental period
     
     start_date = db.Column(db.DateTime, default=datetime.utcnow)
     end_date = db.Column(db.DateTime)
@@ -176,22 +177,44 @@ class Rental(db.Model):
         super().__init__(*args, **kwargs)
         if not self.rental_id:
             self.rental_id = generate_id('RENT', 10)
+        # Use rental_period if set, otherwise default to 30
+        period = self.rental_period if self.rental_period else 30
         if not self.end_date and self.start_date:
-            self.end_date = self.start_date + timedelta(days=30)
+            self.end_date = self.start_date + timedelta(days=period)
     
     def is_expired(self):
         """Check if rental period has expired"""
         return datetime.utcnow() >= self.end_date
     
     def days_remaining(self):
-        """Get days remaining in rental period"""
+        """Get days remaining in rental period (excluding today)"""
         if self.is_expired():
             return 0
-        return (self.end_date - datetime.utcnow()).days
+        
+        # Calculate remaining days properly
+        today = datetime.utcnow().date()
+        end_date = self.end_date.date()
+        
+        # If end date is today or in the past
+        if end_date <= today:
+            return 0
+        
+        # Calculate days until end date (excluding today)
+        return (end_date - today).days
     
     def calculate_daily_earning(self):
         """Calculate daily earning for this rental"""
         return self.daily_earning
+    
+    def get_rental_period(self):
+        """Get the rental period in days"""
+        return self.rental_period or 30
+    
+    def get_progress(self):
+        """Get rental progress as percentage"""
+        if not self.rental_period:
+            return 0
+        return min(100, int((self.days_elapsed / self.rental_period) * 100))
     
     def __repr__(self):
         return f'<Rental {self.rental_id}>'
