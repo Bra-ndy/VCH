@@ -191,16 +191,21 @@ class Rental(db.Model):
         if self.is_expired():
             return 0
         
-        # Calculate remaining days properly
         today = datetime.utcnow().date()
         end_date = self.end_date.date()
         
-        # If end date is today or in the past
         if end_date <= today:
             return 0
         
-        # Calculate days until end date (excluding today)
-        return (end_date - today).days
+        # Calculate days until end date
+        remaining_days = (end_date - today).days
+        
+        # Subtract 1 to exclude today
+        # Example: If today is day 1 of 60, remaining should be 59, not 60
+        if remaining_days > 0:
+            remaining_days -= 1
+        
+        return remaining_days
     
     def calculate_daily_earning(self):
         """Calculate daily earning for this rental"""
