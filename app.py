@@ -652,17 +652,22 @@ def create_app(config_name='development'):
             app.logger.error(f'❌ Error seeding vehicles: {str(e)}')
         
         # =============================================
-        # FIX EXISTING RENTALS ON STARTUP
+        # FIX EXISTING RENTALS ON STARTUP - DISABLED
         # =============================================
-        try:
-            from cron_jobs import fix_existing_rentals
-            fix_existing_rentals()
-            app.logger.info('✅ Rental data verified and fixed on startup')
-                
-        except ImportError:
-            app.logger.warning('⚠️ cron_jobs module not found, skipping rental fix')
-        except Exception as e:
-            app.logger.error(f'❌ Error fixing rentals on startup: {str(e)}')
+        # The fix_existing_rentals function is now only triggered manually
+        # via the /admin/fix-rentals endpoint to avoid SSL connection issues.
+        # This prevents repeated SSL errors during app startup.
+        app.logger.info('ℹ️ Rental fix on startup disabled. Use /admin/fix-rentals endpoint if needed.')
+        
+        # Original code commented out to prevent SSL errors:
+        # try:
+        #     from cron_jobs import fix_existing_rentals
+        #     fix_existing_rentals()
+        #     app.logger.info('✅ Rental data verified and fixed on startup')
+        # except ImportError:
+        #     app.logger.warning('⚠️ cron_jobs module not found, skipping rental fix')
+        # except Exception as e:
+        #     app.logger.error(f'❌ Error fixing rentals on startup: {str(e)}')
     
     return app
 
