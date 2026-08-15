@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
 from datetime import datetime, timezone
 import re
+import secrets
 
 from models import db, User, Notification, ActivityLog, ReferralBonus, Transaction
 from forms import LoginForm, RegistrationForm, ForgotPasswordForm, ResetPasswordForm
@@ -152,7 +153,9 @@ def register():
             db.session.add(user)
             db.session.flush()  # This assigns an ID to user without committing
             
-            # Handle referral - ONLY LINK THE USER, NO BONUS YET
+            # =============================================
+            # REFERRAL HANDLING - LINK THE USER
+            # =============================================
             if referral_code_used:
                 # Find the referrer by their referral code
                 referrer = User.query.filter_by(referral_code=referral_code_used.upper()).first()
@@ -170,7 +173,7 @@ def register():
                     notification = Notification(
                         user_id=referrer.id,
                         title='New Referral! 👤',
-                        message=f'{user.username} has joined using your referral link! They will earn you a bonus when they rent their first car.',
+                        message=f'{user.username} has joined using your referral link! They will earn you a 10% commission when they make their first deposit.',
                         type='info'
                     )
                     db.session.add(notification)
@@ -179,14 +182,13 @@ def register():
                     print(f"✅ User {user.username} linked to referrer {referrer.username}")
                     
                     # Flash message for the new user
-                    flash(f'Welcome! You were referred by {referrer.username}. You\'ll both earn a bonus when you rent your first car!', 'success')
+                    flash(f'Welcome! You were referred by {referrer.username}. They will earn 10% commission when you make your first deposit!', 'success')
                 else:
                     # Referral code not found
                     flash('Referral code not found. You can still register without a referral.', 'warning')
             
             # Generate referral code for the new user if they don't have one
             if not user.referral_code:
-                import secrets
                 user.referral_code = secrets.token_hex(4).upper()
             
             db.session.commit()
@@ -260,7 +262,7 @@ def verify_email(token):
         user.is_verified = True
         db.session.commit()
         
-        # Send welcome bonus notification
+        # Send welcome notification
         notification = Notification(
             user_id=user.id,
             title='Email Verified!',

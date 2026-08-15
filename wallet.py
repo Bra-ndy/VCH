@@ -6,7 +6,7 @@ from sqlalchemy import func
 import re
 import logging
 
-from models import db, User, Transaction, Notification
+from models import db, User, Transaction, Notification, ReferralBonus
 from forms import DepositForm, WithdrawForm
 from utils.wallet import process_deposit, process_withdrawal
 
@@ -133,6 +133,126 @@ def deposit_mpesa():
                          admin_name=admin_name,
                          admin_number=admin_number,
                          recent_deposits=recent_deposits)
+
+# =============================================
+# ADMIN: VERIFY DEPOSIT (Admin Only)
+# =============================================
+@wallet_bp.route('/admin/verify-deposit/<int:transaction_id>', methods=['POST'])
+@login_required
+def verify_deposit(transaction_id):
+    """Admin endpoint to verify a deposit and process referral commission"""
+    # Check if user is admin
+    is_admin = (
+        current_user.email == 'admin@vch.com' or 
+        current_user.agent_level == 'level2' or
+        current_user.id == 1 or
+        current_user.username == 'admin'
+    )
+    
+    if not is_admin:
+        flash('Unauthorized access', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        transaction = Transaction.query.get_or_404(transaction_id)
+        
+        if transaction.status != 'pending':
+            flash('Transaction already processed', 'warning')
+            return redirect(url_for('admin.dashboard'))
+        
+        # Verify the deposit
+        transaction.status = 'completed'
+        transaction.completed_at = datetime.utcnow()
+        
+        # Update user balance
+        user = User.query.get(transaction.user_id)
+        if user:
+            user.balance += transaction.amount
+            user.total_deposited += transaction.amount
+        
+        # =============================================
+        # REFERRAL COMMISSION ON FIRST DEPOSIT
+        # =============================================
+        # Check if this is the user's first completed deposit
+        previous_deposits = Transaction.query.filter_by(
+            user_id=transaction.user_id,
+            type='deposit',
+            status='completed'
+        ).count()
+        
+        # If this is the first deposit (only the one we just completed)
+        if previous_deposits == 1 and user.referred_by:
+            referrer = User.query.get(user.referred_by)
+            if referrer:
+                commission = transaction.amount * 0.10  # 10% of deposit amount
+                
+                # Add to referrer's balance
+                referrer.balance += commission
+                referrer.total_earned += commission
+                
+                # Create referral bonus record
+                referral_bonus = ReferralBonus(
+                    referrer_id=referrer.id,
+                    referred_id=user.id,
+                    amount=commission,
+                    type='deposit_commission',
+                    is_paid=True,
+                    paid_at=datetime.utcnow()
+                )
+                db.session.add(referral_bonus)
+                
+                # Create transaction for referrer
+                commission_txn = Transaction(
+                    user_id=referrer.id,
+                    type='referral_commission',
+                    amount=commission,
+                    fee=0,
+                    net_amount=commission,
+                    description=f'10% commission from {user.username}\'s first deposit (KSH {transaction.amount:,.2f})',
+                    status='completed'
+                )
+                db.session.add(commission_txn)
+                
+                # Create notification for referrer
+                referrer_notification = Notification(
+                    user_id=referrer.id,
+                    title='Referral Commission Earned! 🎉',
+                    message=f'{user.username} made their first deposit of KSH {transaction.amount:,.2f}! You earned 10% commission: KSH {commission:,.2f}!',
+                    type='success'
+                )
+                db.session.add(referrer_notification)
+                
+                # Create notification for user about referral bonus
+                user_notification = Notification(
+                    user_id=user.id,
+                    title='Welcome Bonus! 🎉',
+                    message=f'Your first deposit of KSH {transaction.amount:,.2f} has been verified! Your referrer earned KSH {commission:,.2f} commission!',
+                    type='success'
+                )
+                db.session.add(user_notification)
+                
+                # Mark user's bonus as applied
+                user.referral_bonus_applied = True
+                
+                logger.info(f"✅ Referral commission: {referrer.username} earned KSH {commission:.2f} from {user.username}'s first deposit")
+                
+                flash(f'✅ Deposit of KSH {transaction.amount:,.2f} verified! Referrer {referrer.username} earned KSH {commission:,.2f} commission!', 'success')
+            else:
+                flash(f'✅ Deposit of KSH {transaction.amount:,.2f} verified successfully!', 'success')
+        else:
+            if user.referred_by:
+                flash(f'✅ Deposit of KSH {transaction.amount:,.2f} verified (not first deposit, no commission)', 'info')
+            else:
+                flash(f'✅ Deposit of KSH {transaction.amount:,.2f} verified successfully!', 'success')
+        
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error verifying deposit: {e}")
+        flash(f'Error verifying deposit: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.dashboard'))
 
 # =============================================
 # STK PUSH - COMING SOON (Disabled)
@@ -292,7 +412,7 @@ def earnings():
     today_earnings = Transaction.query.filter(
         Transaction.user_id == current_user.id,
         db.func.date(Transaction.created_at) == today,
-        Transaction.type.in_(['rental_earning', 'service_earning', 'referral_bonus', 'agent_salary'])
+        Transaction.type.in_(['rental_earning', 'service_earning', 'referral_commission', 'agent_salary'])
     ).all()
     today_earnings_total = sum(t.amount for t in today_earnings)
     
@@ -300,7 +420,7 @@ def earnings():
     week_earnings = Transaction.query.filter(
         Transaction.user_id == current_user.id,
         db.func.date(Transaction.created_at) >= week_start,
-        Transaction.type.in_(['rental_earning', 'service_earning', 'referral_bonus', 'agent_salary'])
+        Transaction.type.in_(['rental_earning', 'service_earning', 'referral_commission', 'agent_salary'])
     ).all()
     week_earnings_total = sum(t.amount for t in week_earnings)
     
@@ -308,7 +428,7 @@ def earnings():
     month_earnings = Transaction.query.filter(
         Transaction.user_id == current_user.id,
         db.func.date(Transaction.created_at) >= month_start,
-        Transaction.type.in_(['rental_earning', 'service_earning', 'referral_bonus', 'agent_salary'])
+        Transaction.type.in_(['rental_earning', 'service_earning', 'referral_commission', 'agent_salary'])
     ).all()
     month_earnings_total = sum(t.amount for t in month_earnings)
     
@@ -317,7 +437,7 @@ def earnings():
         func.sum(Transaction.amount).label('total')
     ).filter(
         Transaction.user_id == current_user.id,
-        Transaction.type.in_(['rental_earning', 'service_earning', 'referral_bonus', 'agent_salary'])
+        Transaction.type.in_(['rental_earning', 'service_earning', 'referral_commission', 'agent_salary'])
     ).group_by(Transaction.type).all()
     
     earnings_by_type_dict = {e[0]: float(e[1]) for e in earnings_by_type}

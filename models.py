@@ -234,7 +234,7 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
     # Transaction details
-    type = db.Column(db.String(20), nullable=False)  # deposit, withdrawal, rental_earning, service_earning, referral_bonus, agent_salary, welcome_bonus
+    type = db.Column(db.String(20), nullable=False)  # deposit, withdrawal, rental_earning, service_earning, referral_commission, agent_salary, welcome_bonus
     amount = db.Column(db.Float, nullable=False)
     fee = db.Column(db.Float, default=0.0)
     net_amount = db.Column(db.Float, nullable=False)
@@ -300,7 +300,7 @@ class ReferralBonus(db.Model):
     
     # Bonus details
     amount = db.Column(db.Float, nullable=False)
-    type = db.Column(db.String(20), default='rental_bonus')  # Changed from 'signup_bonus' to 'rental_bonus'
+    type = db.Column(db.String(20), default='deposit_commission')  # deposit_commission, rental_commission (legacy)
     
     # Status
     is_paid = db.Column(db.Boolean, default=False)

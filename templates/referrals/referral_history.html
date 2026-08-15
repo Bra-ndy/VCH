@@ -11,13 +11,13 @@
     <div class="row g-3 mb-4">
         <div class="col-md-6">
             <div class="stat-card">
-                <div class="number">KSH {{ "%.2f"|format(total_earnings) }}</div>
+                <div class="number">KSH {{ "%.2f"|format(total_earnings or 0) }}</div>
                 <div class="label">Total Referral Earnings</div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="stat-card">
-                <div class="number">{{ bonuses.total }}</div>
+                <div class="number">{{ bonuses.items|length if bonuses and bonuses.items else 0 }}</div>
                 <div class="label">Total Bonuses Received</div>
             </div>
         </div>
@@ -37,35 +37,49 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for bonus in bonuses.items %}
-                    <tr>
-                        <td>
-                            <span class="badge bg-{{ 'success' if bonus.type == 'signup_bonus' else 'info' }}">
-                                {{ bonus.type|replace('_', ' ')|title }}
-                            </span>
-                        </td>
-                        <td class="text-success">KSH {{ "%.2f"|format(bonus.amount) }}</td>
-                        <td>
-                            {% if bonus.type == 'signup_bonus' %}
-                                Signup bonus from {{ bonus.referred.username if bonus.referred else 'referral' }}
-                            {% else %}
-                                Daily commission on referral earnings
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="badge bg-{{ 'success' if bonus.is_paid else 'warning' }}">
-                                {{ 'Paid' if bonus.is_paid else 'Pending' }}
-                            </span>
-                        </td>
-                        <td><small>{{ bonus.created_at.strftime('%d/%m/%Y %H:%M') }}</small></td>
-                    </tr>
-                    {% endfor %}
+                    {% if bonuses and bonuses.items %}
+                        {% for bonus in bonuses.items %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-{{ 'success' if bonus.type == 'signup_bonus' or bonus.type == 'rental_commission' else 'info' }}">
+                                    {{ bonus.type|replace('_', ' ')|title }}
+                                </span>
+                            </td>
+                            <td class="text-success">KSH {{ "%.2f"|format(bonus.amount) }}</td>
+                            <td>
+                                {% if bonus.type == 'signup_bonus' or bonus.type == 'rental_commission' %}
+                                    {% if bonus.referred %}
+                                        Commission from {{ bonus.referred.username }}'s first rental
+                                    {% else %}
+                                        Referral commission
+                                    {% endif %}
+                                {% else %}
+                                    Daily commission on referral earnings
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if bonus.is_paid else 'warning' }}">
+                                    {{ 'Paid' if bonus.is_paid else 'Pending' }}
+                                </span>
+                            </td>
+                            <td><small>{{ bonus.created_at.strftime('%d/%m/%Y %H:%M') }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted-custom py-4">
+                                <i class="fas fa-inbox" style="font-size: 2rem; color: var(--text-muted); opacity: 0.3;"></i>
+                                <p class="mt-2 mb-0">No referral bonuses yet</p>
+                                <small>Refer friends to start earning commissions!</small>
+                            </td>
+                        </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
         
         <!-- Pagination -->
-        {% if bonuses.pages > 1 %}
+        {% if bonuses and bonuses.pages and bonuses.pages > 1 %}
         <nav>
             <ul class="pagination justify-content-center">
                 {% if bonuses.has_prev %}
@@ -105,7 +119,7 @@
     
     <!-- Back to Referrals -->
     <div class="mt-3">
-        <a href="{{ url_for('referrals.referrals') }}" class="text-gold">
+        <a href="{{ url_for('referrals.dashboard') }}" class="text-gold">
             <i class="fas fa-arrow-left"></i> Back to Referrals
         </a>
     </div>

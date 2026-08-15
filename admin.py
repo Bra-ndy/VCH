@@ -10,6 +10,9 @@ from utils.sms import send_sms
 from utils.email import send_email
 from werkzeug.security import generate_password_hash
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -313,6 +316,7 @@ def verify_user(user_id):
 
 @admin_bp.route('/users/<int:user_id>/add-money', methods=['POST'])
 def add_money(user_id):
+    """Admin adds money to a user's account - triggers referral commission on first deposit"""
     user = User.query.get_or_404(user_id)
     
     amount = request.form.get('amount', type=float)
@@ -322,37 +326,119 @@ def add_money(user_id):
     
     description = request.form.get('description', 'Admin deposit')
     
-    # Create transaction
-    transaction = Transaction(
-        user_id=user_id,
-        type='deposit',
-        amount=amount,
-        fee=0,
-        net_amount=amount,
-        description=f'Admin: {description}',
-        status='completed',
-        payment_method='admin'
-    )
-    db.session.add(transaction)
+    try:
+        # =============================================
+        # CHECK IF THIS IS USER'S FIRST DEPOSIT
+        # =============================================
+        previous_deposits = Transaction.query.filter_by(
+            user_id=user.id,
+            type='deposit',
+            status='completed'
+        ).count()
+        
+        is_first_deposit = (previous_deposits == 0)
+        
+        # Create deposit transaction
+        transaction = Transaction(
+            user_id=user_id,
+            type='deposit',
+            amount=amount,
+            fee=0,
+            net_amount=amount,
+            description=f'Admin: {description}',
+            status='completed',
+            payment_method='admin',
+            payment_reference=f'ADMIN_{datetime.utcnow().strftime("%Y%m%d%H%M%S")}'
+        )
+        db.session.add(transaction)
+        
+        # Update user balance
+        user.balance += amount
+        user.total_deposited += amount
+        db.session.add(user)
+        
+        # =============================================
+        # REFERRAL COMMISSION ON FIRST DEPOSIT
+        # =============================================
+        commission_added = False
+        commission_amount = 0
+        
+        if is_first_deposit and user.referred_by:
+            referrer = User.query.get(user.referred_by)
+            if referrer:
+                commission = amount * 0.10  # 10% of deposit amount
+                
+                # Add to referrer's balance
+                referrer.balance += commission
+                referrer.total_earned += commission
+                db.session.add(referrer)
+                
+                # Create referral bonus record
+                referral_bonus = ReferralBonus(
+                    referrer_id=referrer.id,
+                    referred_id=user.id,
+                    amount=commission,
+                    type='deposit_commission',
+                    is_paid=True,
+                    paid_at=datetime.utcnow()
+                )
+                db.session.add(referral_bonus)
+                
+                # Create transaction for referrer
+                commission_txn = Transaction(
+                    user_id=referrer.id,
+                    type='referral_commission',
+                    amount=commission,
+                    fee=0,
+                    net_amount=commission,
+                    description=f'10% commission from {user.username}\'s first deposit (KSH {amount:,.2f})',
+                    status='completed'
+                )
+                db.session.add(commission_txn)
+                
+                # Create notification for referrer
+                notification = Notification(
+                    user_id=referrer.id,
+                    title='Referral Commission Earned! 🎉',
+                    message=f'{user.username} made their first deposit of KSH {amount:,.2f}! You earned 10% commission: KSH {commission:,.2f}!',
+                    type='success'
+                )
+                db.session.add(notification)
+                
+                # Create notification for user (the one who deposited)
+                user_notification = Notification(
+                    user_id=user.id,
+                    title='Welcome Bonus! 🎉',
+                    message=f'Your first deposit of KSH {amount:,.2f} has been processed! Your referrer {referrer.username} earned KSH {commission:,.2f} commission!',
+                    type='success'
+                )
+                db.session.add(user_notification)
+                
+                # Mark user's bonus as applied
+                user.referral_bonus_applied = True
+                db.session.add(user)
+                
+                commission_added = True
+                commission_amount = commission
+                
+                logger.info(f"✅ Referral commission: {referrer.username} earned KSH {commission:.2f} from {user.username}'s first deposit")
+        
+        db.session.commit()
+        
+        # Flash message based on whether commission was added
+        if commission_added:
+            flash(f'✅ KSH {amount:,.2f} added to {user.username}\'s account. Referrer earned KSH {commission_amount:,.2f} commission!', 'success')
+        else:
+            if user.referred_by:
+                flash(f'✅ KSH {amount:,.2f} added to {user.username}\'s account (not first deposit, no commission)', 'info')
+            else:
+                flash(f'✅ KSH {amount:,.2f} added to {user.username}\'s account', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error adding money: {e}")
+        flash(f'Error: {str(e)}', 'danger')
     
-    # Update user balance
-    user.balance += amount
-    user.total_deposited += amount
-    db.session.add(user)
-    
-    db.session.commit()
-    
-    # Send notification
-    notification = Notification(
-        user_id=user_id,
-        title='Funds Added',
-        message=f'The administrator has added KSH {amount:,.2f} to your account. Reason: {description}',
-        type='success'
-    )
-    db.session.add(notification)
-    db.session.commit()
-    
-    flash(f'KSH {amount:,.2f} added to {user.username}\'s account.', 'success')
     return redirect(url_for('admin.view_user', user_id=user_id))
 
 @admin_bp.route('/users/<int:user_id>/deduct-money', methods=['POST'])

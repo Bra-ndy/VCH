@@ -1,11 +1,11 @@
-# payments.py - Complete with M-Pesa integration
+# payments.py - Complete with M-Pesa integration and referral commission
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from datetime import datetime
 import json
 import logging
 
-from models import db, Transaction, Notification, User
+from models import db, Transaction, Notification, User, ReferralBonus
 from utils.mpesa import MpesaAPI
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,15 @@ def initiate_mpesa_payment():
         if not phone.startswith('254'):
             phone = '254' + phone
         
+        # Check if this is user's first deposit
+        previous_deposits = Transaction.query.filter_by(
+            user_id=current_user.id,
+            type='deposit',
+            status='completed'
+        ).count()
+        
+        is_first_deposit = (previous_deposits == 0)
+        
         # Create transaction
         transaction = Transaction(
             user_id=current_user.id,
@@ -73,6 +82,7 @@ def initiate_mpesa_payment():
                 'success': True,
                 'checkout_request_id': result.get('checkout_request_id'),
                 'transaction_id': transaction.transaction_id,
+                'is_first_deposit': is_first_deposit,
                 'message': 'STK Push sent successfully'
             })
         else:
@@ -86,7 +96,7 @@ def initiate_mpesa_payment():
 
 @payments_bp.route('/mpesa/callback', methods=['POST'])
 def mpesa_callback():
-    """Handle M-Pesa payment callback"""
+    """Handle M-Pesa payment callback with referral commission"""
     try:
         data = request.get_json()
         if not data:
@@ -146,14 +156,68 @@ def mpesa_callback():
                     user.total_deposited += transaction.amount
                     db.session.add(user)
                 
-                # Send notification
-                notification = Notification(
+                # =============================================
+                # REFERRAL COMMISSION ON FIRST DEPOSIT
+                # =============================================
+                # Check if this is the user's first deposit
+                previous_deposits = Transaction.query.filter_by(
                     user_id=transaction.user_id,
-                    title='Deposit Successful',
-                    message=f'Your deposit of KSH {transaction.amount:,.2f} via M-Pesa has been completed. Receipt: {mpesa_receipt}',
-                    type='success'
-                )
-                db.session.add(notification)
+                    type='deposit',
+                    status='completed'
+                ).count()
+                
+                # If this is the first deposit (only the one we just completed)
+                if previous_deposits == 1 and user.referred_by:
+                    referrer = User.query.get(user.referred_by)
+                    if referrer:
+                        commission = transaction.amount * 0.10  # 10% of deposit amount
+                        
+                        # Add to referrer's balance
+                        referrer.balance += commission
+                        referrer.total_earned += commission
+                        
+                        # Create referral bonus record
+                        referral_bonus = ReferralBonus(
+                            referrer_id=referrer.id,
+                            referred_id=user.id,
+                            amount=commission,
+                            type='deposit_commission',
+                            is_paid=True,
+                            paid_at=datetime.utcnow()
+                        )
+                        db.session.add(referral_bonus)
+                        
+                        # Create transaction for referrer
+                        commission_txn = Transaction(
+                            user_id=referrer.id,
+                            type='referral_commission',
+                            amount=commission,
+                            fee=0,
+                            net_amount=commission,
+                            description=f'10% commission from {user.username}\'s first deposit (KSH {transaction.amount:,.2f})',
+                            status='completed'
+                        )
+                        db.session.add(commission_txn)
+                        
+                        # Create notification for referrer
+                        referrer_notification = Notification(
+                            user_id=referrer.id,
+                            title='Referral Commission Earned! 🎉',
+                            message=f'{user.username} made their first deposit of KSH {transaction.amount:,.2f}! You earned 10% commission: KSH {commission:,.2f}!',
+                            type='success'
+                        )
+                        db.session.add(referrer_notification)
+                        
+                        # Create notification for user about referral bonus
+                        user_notification = Notification(
+                            user_id=user.id,
+                            title='Welcome Bonus! 🎉',
+                            message=f'Your first deposit of KSH {transaction.amount:,.2f} has been completed! Your referrer earned KSH {commission:,.2f} commission!',
+                            type='success'
+                        )
+                        db.session.add(user_notification)
+                        
+                        logger.info(f"✅ Referral commission: {referrer.username} earned KSH {commission:.2f} from {user.username}'s first deposit")
                 
                 db.session.commit()
                 logger.info(f"Payment completed for transaction: {transaction.transaction_id}")
