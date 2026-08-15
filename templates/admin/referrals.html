@@ -4,39 +4,150 @@
 
 {% block content %}
 <div class="container py-4">
-    <h2><i class="fas fa-user-plus gold"></i> Referrals Overview</h2>
-    
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-user-plus gold"></i> Referrals Overview</h2>
+            <p class="text-muted-custom">Manage and monitor all referral commissions</p>
+        </div>
+        <div>
+            <span class="badge bg-gold">Total: {{ referrals|length }}</span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number">{{ total_referrals|default(0) }}</div>
+                <div class="label">Total Referrals</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number gold">KSH {{ "%.2f"|format(total_bonus_paid|default(0)) }}</div>
+                <div class="label">Total Bonus Paid</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="number gold">{{ top_referrer|default('N/A') }}</div>
+                <div class="label">Top Referrer</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referrals Table -->
     <div class="card-dark">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5><i class="fas fa-list gold me-2"></i>All Referral Commissions</h5>
+        </div>
+        
+        {% if referrals %}
         <div class="table-responsive">
             <table class="table table-dark table-hover">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Referrer</th>
                         <th>Referred</th>
                         <th>Amount</th>
                         <th>Type</th>
-                        <th>Paid</th>
+                        <th>Status</th>
                         <th>Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for bonus in referrals %}
                     <tr>
-                        <td>{{ bonus.referrer.username }}</td>
-                        <td>{{ bonus.referred.username }}</td>
-                        <td class="text-success">KSH {{ "%.2f"|format(bonus.amount) }}</td>
-                        <td>{{ bonus.type|replace('_', ' ')|title }}</td>
+                        <td>{{ loop.index }}</td>
                         <td>
-                            <span class="badge bg-{{ 'success' if bonus.is_paid else 'danger' }}">
+                            <a href="{{ url_for('admin.view_user', user_id=bonus.referrer.id) }}" class="text-gold">
+                                {{ bonus.referrer.username }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin.view_user', user_id=bonus.referred.id) }}" class="text-gold">
+                                {{ bonus.referred.username }}
+                            </a>
+                        </td>
+                        <td class="text-success fw-bold">KSH {{ "%.2f"|format(bonus.amount) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'info' if bonus.type == 'deposit_commission' else 'warning' if bonus.type == 'rental_commission' else 'secondary' }}">
+                                {% if bonus.type == 'deposit_commission' %}
+                                    <i class="fas fa-money-bill-wave me-1"></i>
+                                {% elif bonus.type == 'rental_commission' %}
+                                    <i class="fas fa-car me-1"></i>
+                                {% endif %}
+                                {{ bonus.type|replace('_', ' ')|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if bonus.is_paid else 'warning' }}">
+                                <i class="fas fa-{{ 'check-circle' if bonus.is_paid else 'clock' }} me-1"></i>
                                 {{ 'Paid' if bonus.is_paid else 'Pending' }}
                             </span>
                         </td>
-                        <td>{{ bonus.created_at.strftime('%d/%m/%Y') }}</td>
+                        <td class="text-muted-custom">{{ bonus.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-inbox" style="font-size: 3rem; color: #2a2a2a;"></i>
+            <p class="text-muted-custom mt-3 mb-0">No referral bonuses yet</p>
+            <small class="text-muted-custom">Referral commissions will appear here when users make their first deposit</small>
+        </div>
+        {% endif %}
     </div>
 </div>
+
+<style>
+    .stat-card {
+        background: var(--dark-gray);
+        border: 1px solid var(--medium-gray);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        border-color: var(--gold);
+        transform: translateY(-4px);
+        box-shadow: 0 4px 20px rgba(212, 175, 55, 0.1);
+    }
+    .stat-card .number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gold);
+    }
+    .stat-card .number.gold {
+        color: var(--gold);
+    }
+    .stat-card .label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+    }
+    .table-dark th {
+        border-color: var(--medium-gray);
+        color: var(--gold);
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .table-dark td {
+        border-color: var(--medium-gray);
+        vertical-align: middle;
+    }
+    .text-gold {
+        color: var(--gold) !important;
+    }
+    .text-gold:hover {
+        color: var(--gold-light) !important;
+    }
+</style>
 {% endblock %}

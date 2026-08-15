@@ -72,21 +72,6 @@
         color: #d4af37;
     }
     
-    .admin-stat-card .stat-trend {
-        display: inline-block;
-        font-size: 0.7rem;
-        margin-top: 0.3rem;
-        padding: 0.1rem 0.5rem;
-        border-radius: 1rem;
-        background: rgba(40, 167, 69, 0.15);
-        color: #28a745;
-    }
-    
-    .admin-stat-card .stat-trend.down {
-        background: rgba(220, 53, 69, 0.15);
-        color: #dc3545;
-    }
-    
     /* Admin Quick Actions */
     .admin-actions-grid {
         display: grid;
@@ -189,6 +174,33 @@
         color: #d4af37;
     }
     
+    .admin-table .status-badge {
+        padding: 0.2rem 0.6rem;
+        border-radius: 1rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .admin-table .status-badge.active {
+        background: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+    }
+    
+    .admin-table .status-badge.inactive {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
+    
+    .admin-table .status-badge.pending {
+        background: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+    }
+    
+    .admin-table .status-badge.completed {
+        background: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+    }
+    
     /* Responsive */
     @media (max-width: 992px) {
         .admin-stats-grid {
@@ -255,15 +267,20 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid py-4">
     <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-            <h2><i class="fas fa-tachometer-alt gold"></i> Admin Dashboard</h2>
-            <p class="text-muted-custom">Welcome to the admin panel. Manage users, vehicles, transactions and more.</p>
+            <h2 class="fw-bold mb-1">
+                <i class="fas fa-shield-alt gold"></i> Admin Dashboard
+            </h2>
+            <p class="text-muted-custom mb-0">Welcome to the admin panel. Manage users, vehicles, transactions and more.</p>
         </div>
         <div>
-            <span class="badge bg-gold">Admin Panel</span>
+            <span class="badge bg-gold">
+                <i class="fas fa-circle me-1" style="font-size: 0.5rem; color: #28a745;"></i>
+                System Online
+            </span>
         </div>
     </div>
     
@@ -287,7 +304,7 @@
             <span class="stat-icon"><i class="fas fa-car"></i></span>
             <div class="stat-number">{{ total_vehicles|default(0) }}</div>
             <div class="stat-label">Total Vehicles</div>
-            <span class="stat-badge">Active: {{ total_vehicles|default(0) }}</span>
+            <span class="stat-badge">Available</span>
         </div>
         
         <div class="admin-stat-card">
@@ -299,14 +316,14 @@
         
         <div class="admin-stat-card">
             <span class="stat-icon"><i class="fas fa-money-bill-wave"></i></span>
-            <div class="stat-number gold">KSH {{ "%.2f"|format(total_deposits|default(0)) }}</div>
+            <div class="stat-number gold">KSH {{ "%.0f"|format(total_deposits|default(0)) }}</div>
             <div class="stat-label">Total Deposits</div>
             <span class="stat-badge">Revenue</span>
         </div>
         
         <div class="admin-stat-card">
             <span class="stat-icon"><i class="fas fa-arrow-up-right"></i></span>
-            <div class="stat-number danger">KSH {{ "%.2f"|format(total_withdrawals|default(0)) }}</div>
+            <div class="stat-number danger">KSH {{ "%.0f"|format(total_withdrawals|default(0)) }}</div>
             <div class="stat-label">Total Withdrawals</div>
             <span class="stat-badge">Pending: {{ pending_withdrawals|default(0) }}</span>
         </div>
@@ -314,33 +331,13 @@
     
     <!-- Quick Actions -->
     <div class="admin-actions-grid">
-        <a href="{{ url_for('admin.users') }}" class="admin-action-btn">
-            <i class="fas fa-users"></i>
-            <span>Users</span>
-            <span class="badge-count">{{ total_users|default(0) }}</span>
-        </a>
-        <a href="{{ url_for('admin.vehicles') }}" class="admin-action-btn">
-            <i class="fas fa-car"></i>
-            <span>Vehicles</span>
-            <span class="badge-count">{{ total_vehicles|default(0) }}</span>
-        </a>
-        <a href="{{ url_for('admin.rentals') }}" class="admin-action-btn">
-            <i class="fas fa-calendar-check"></i>
-            <span>Rentals</span>
-            <span class="badge-count">{{ total_rentals|default(0) }}</span>
-        </a>
-        <a href="{{ url_for('admin.withdrawals') }}" class="admin-action-btn">
-            <i class="fas fa-money-bill-wave"></i>
-            <span>Withdrawals</span>
-            <span class="badge-count">{{ pending_withdrawals|default(0) }}</span>
-        </a>
-        <a href="{{ url_for('admin.deposits') }}" class="admin-action-btn">
-            <i class="fas fa-plus-circle"></i>
-            <span>Deposits</span>
-        </a>
-        <a href="{{ url_for('admin.referrals') }}" class="admin-action-btn">
+        <a href="{{ url_for('admin.add_user') }}" class="admin-action-btn">
             <i class="fas fa-user-plus"></i>
-            <span>Referrals</span>
+            <span>Add User</span>
+        </a>
+        <a href="{{ url_for('admin.add_vehicle') }}" class="admin-action-btn">
+            <i class="fas fa-car"></i>
+            <span>Add Vehicle</span>
         </a>
         <a href="{{ url_for('admin.announcements') }}" class="admin-action-btn">
             <i class="fas fa-bullhorn"></i>
@@ -350,6 +347,15 @@
             <i class="fas fa-cog"></i>
             <span>Settings</span>
         </a>
+        <a href="{{ url_for('admin.withdrawals') }}" class="admin-action-btn">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Withdrawals</span>
+            <span class="badge-count">{{ pending_withdrawals|default(0) }}</span>
+        </a>
+        <a href="{{ url_for('admin.referrals') }}" class="admin-action-btn">
+            <i class="fas fa-user-plus"></i>
+            <span>Referrals</span>
+        </a>
     </div>
     
     <!-- Recent Users & Transactions -->
@@ -358,7 +364,7 @@
         <div class="col-lg-6">
             <div class="card-dark">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5><i class="fas fa-user-plus gold"></i> Recent Users</h5>
+                    <h5 class="mb-0"><i class="fas fa-users gold me-2"></i>Recent Users</h5>
                     <a href="{{ url_for('admin.users') }}" class="text-gold">View All →</a>
                 </div>
                 <div class="admin-table-wrapper">
@@ -379,20 +385,28 @@
                                         <div class="avatar">
                                             <i class="fas fa-user"></i>
                                         </div>
-                                        {{ user.username }}
+                                        <a href="{{ url_for('admin.view_user', user_id=user.id) }}" class="text-gold">
+                                            {{ user.username }}
+                                        </a>
                                     </div>
                                 </td>
                                 <td>{{ user.email[:20] }}{% if user.email|length > 20 %}...{% endif %}</td>
                                 <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
                                 <td>
-                                    <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                                    <span class="status-badge {{ 'active' if user.is_active else 'inactive' }}">
                                         {{ 'Active' if user.is_active else 'Inactive' }}
                                     </span>
+                                    {% if user.is_verified %}
+                                    <span class="badge bg-info" style="font-size: 0.6rem;">Verified</span>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted-custom">No users yet</td>
+                                <td colspan="4" class="text-center text-muted-custom py-4">
+                                    <i class="fas fa-inbox" style="font-size: 2rem; color: #2a2a2a;"></i>
+                                    <p class="mt-2 mb-0">No users yet</p>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -405,7 +419,7 @@
         <div class="col-lg-6">
             <div class="card-dark">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5><i class="fas fa-history gold"></i> Recent Transactions</h5>
+                    <h5 class="mb-0"><i class="fas fa-history gold me-2"></i>Recent Transactions</h5>
                     <a href="{{ url_for('admin.deposits') }}" class="text-gold">View All →</a>
                 </div>
                 <div class="admin-table-wrapper">
@@ -421,24 +435,32 @@
                         <tbody>
                             {% for txn in recent_transactions %}
                             <tr>
-                                <td>{{ txn.user.username }}</td>
                                 <td>
-                                    <span class="badge bg-{{ 'success' if txn.type == 'deposit' else 'warning' if txn.type == 'withdrawal' else 'info' }}">
+                                    <span class="text-muted-custom">{{ txn.user.username if txn.user else 'Deleted' }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if txn.type == 'deposit' else 'warning' if txn.type == 'withdrawal' else 'info' if txn.type == 'rental_earning' else 'secondary' if txn.type == 'referral_commission' else 'primary' }}">
+                                        {% if txn.type == 'referral_commission' %}
+                                            <i class="fas fa-gift me-1"></i>
+                                        {% endif %}
                                         {{ txn.type|replace('_', ' ')|title }}
                                     </span>
                                 </td>
                                 <td class="{% if txn.amount > 0 %}text-success{% else %}text-danger{% endif %}">
-                                    KSH {{ "%.2f"|format(txn.amount) }}
+                                    {{ '+' if txn.amount > 0 else '' }}KSH {{ "%.2f"|format(txn.amount) }}
                                 </td>
                                 <td>
-                                    <span class="badge bg-{{ 'success' if txn.status == 'completed' else 'warning' if txn.status == 'pending' else 'danger' }}">
+                                    <span class="status-badge {{ 'completed' if txn.status == 'completed' else 'pending' if txn.status == 'pending' else 'inactive' }}">
                                         {{ txn.status|title }}
                                     </span>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted-custom">No transactions yet</td>
+                                <td colspan="4" class="text-center text-muted-custom py-4">
+                                    <i class="fas fa-inbox" style="font-size: 2rem; color: #2a2a2a;"></i>
+                                    <p class="mt-2 mb-0">No transactions yet</p>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
